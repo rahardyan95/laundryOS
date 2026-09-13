@@ -7,7 +7,8 @@ plugins {
 android {
     namespace = "com.laundryos.laundryos_mobile"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Pin ke NDK yang tersedia; hindari unduhan otomatis yang rapuh di lingkungan build.
+    ndkVersion = "30.0.16138531"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

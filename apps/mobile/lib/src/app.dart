@@ -3,7 +3,7 @@ import "package:provider/provider.dart";
 
 import "app_dependencies.dart";
 import "state/auth_controller.dart";
-import "screens/home_screen.dart";
+import "screens/home_shell.dart";
 import "screens/login_screen.dart";
 
 class LaundryOsApp extends StatefulWidget {
@@ -24,10 +24,15 @@ class _LaundryOsAppState extends State<LaundryOsApp> {
 
   @override
   Widget build(BuildContext context) {
+    final deps = widget.dependencies;
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: widget.dependencies.authController),
-        ChangeNotifierProvider.value(value: widget.dependencies.orderController),
+        ChangeNotifierProvider.value(value: deps.authController),
+        ChangeNotifierProvider.value(value: deps.orderController),
+        ChangeNotifierProvider.value(value: deps.deliveryTaskController),
+        ChangeNotifierProvider.value(value: deps.catalogController),
+        ChangeNotifierProvider.value(value: deps.notificationController),
+        ChangeNotifierProvider.value(value: deps.dashboardController),
       ],
       child: MaterialApp(
         title: "LaundryOS",
@@ -51,7 +56,7 @@ class AuthGate extends StatelessWidget {
 
     return switch (status) {
       AuthStatus.unknown => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      AuthStatus.authenticated => const HomeScreen(),
+      AuthStatus.authenticated => const HomeShell(),
       AuthStatus.unauthenticated => const LoginScreen(),
     };
   }
