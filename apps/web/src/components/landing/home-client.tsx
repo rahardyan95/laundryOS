@@ -229,25 +229,23 @@ export function HomeClient() {
         </section>
 
         <section id="peran" className="mx-auto max-w-6xl scroll-mt-28 px-4 py-12 sm:px-6">
-          <div className="mx-auto max-w-6xl scroll-mt-28 px-4 py-12 sm:px-6">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Dibuat untuk setiap peran</h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {roles.map((role, index) => (
-                <div
-                  key={role.title}
-                  className="animate-enter-stagger rounded-2xl border bg-card p-5"
-                  style={{ "--i": index } as CSSProperties}
-                >
-                  <p className="font-mono text-xs font-semibold tracking-widest text-muted-foreground">
-                    0{index + 1}
-                  </p>
-                  <h3 className="mt-1 text-lg font-bold">{role.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    {role.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Dibuat untuk setiap peran</h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {roles.map((role, index) => (
+              <div
+                key={role.title}
+                className="animate-enter-stagger rounded-2xl border bg-card p-5"
+                style={{ "--i": index } as CSSProperties}
+              >
+                <p className="font-mono text-xs font-semibold tracking-widest text-muted-foreground">
+                  0{index + 1}
+                </p>
+                <h3 className="mt-1 text-lg font-bold">{role.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {role.description}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
