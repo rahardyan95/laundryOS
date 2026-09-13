@@ -33,6 +33,7 @@ class _LaundryOsAppState extends State<LaundryOsApp> {
         ChangeNotifierProvider.value(value: deps.catalogController),
         ChangeNotifierProvider.value(value: deps.notificationController),
         ChangeNotifierProvider.value(value: deps.dashboardController),
+        ChangeNotifierProvider.value(value: deps.connectivityController),
       ],
       child: MaterialApp(
         title: "LaundryOS",

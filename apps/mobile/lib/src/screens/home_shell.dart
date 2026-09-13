@@ -3,6 +3,7 @@ import "package:provider/provider.dart";
 
 import "../models/role.dart";
 import "../state/auth_controller.dart";
+import "../state/connectivity_controller.dart";
 import "dashboard_screen.dart";
 import "notifications_screen.dart";
 import "orders_screen.dart";
@@ -26,10 +27,34 @@ class _HomeShellState extends State<HomeShell> {
     final tabs = _tabsFor(role);
     final index = _index.clamp(0, tabs.length - 1);
 
+    final offline = context.select<ConnectivityController, bool>(
+      (connectivity) => !connectivity.isOnline,
+    );
+
     return Scaffold(
-      body: IndexedStack(
-        index: index,
-        children: tabs.map((tab) => tab.screen).toList(),
+      body: Column(
+        children: [
+          if (offline)
+            Material(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: const SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                  child: Text(
+                    "Mode offline — menampilkan data terakhir.",
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            child: IndexedStack(
+              index: index,
+              children: tabs.map((tab) => tab.screen).toList(),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,

@@ -1,6 +1,8 @@
 import "api/api_client.dart";
 import "api/api_transport.dart";
+import "api/caching_api_transport.dart";
 import "api/http_api_transport.dart";
+import "api/offline_cache.dart";
 import "api/session_store.dart";
 import "config/app_config.dart";
 import "repositories/auth_repository.dart";
@@ -11,6 +13,7 @@ import "repositories/notification_repository.dart";
 import "repositories/order_repository.dart";
 import "state/auth_controller.dart";
 import "state/catalog_controller.dart";
+import "state/connectivity_controller.dart";
 import "state/dashboard_controller.dart";
 import "state/delivery_task_controller.dart";
 import "state/notification_controller.dart";
@@ -19,9 +22,17 @@ import "state/order_controller.dart";
 /// Titik komposisi dependency. Test dapat menyuntikkan transport/session store
 /// palsu lewat konstruktor.
 class AppDependencies {
-  AppDependencies({ApiTransport? transport, SessionStore? store})
-      : transport = transport ?? HttpApiTransport(baseUrl: AppConfig.apiBaseUrl),
-        store = store ?? SecureSessionStore() {
+  AppDependencies({
+    ApiTransport? transport,
+    SessionStore? store,
+    OfflineCache? offlineCache,
+  })  : store = store ?? SecureSessionStore(),
+        offlineCache = offlineCache ?? SharedPrefsOfflineCache(),
+        transport = transport ??
+            CachingApiTransport(
+              HttpApiTransport(baseUrl: AppConfig.apiBaseUrl),
+              offlineCache ?? SharedPrefsOfflineCache(),
+            ) {
     api = ApiClient(this.transport);
 
     final token = this.store.token;
@@ -39,10 +50,12 @@ class AppDependencies {
     catalogController = CatalogController(catalogRepository);
     notificationController = NotificationController(notificationRepository);
     dashboardController = DashboardController(dashboardRepository);
+    connectivityController = ConnectivityController();
   }
 
   final ApiTransport transport;
   final SessionStore store;
+  final OfflineCache offlineCache;
 
   late final ApiClient api;
   late final AuthRepository authRepository;
@@ -58,4 +71,5 @@ class AppDependencies {
   late final CatalogController catalogController;
   late final NotificationController notificationController;
   late final DashboardController dashboardController;
+  late final ConnectivityController connectivityController;
 }

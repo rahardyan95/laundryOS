@@ -1,0 +1,6 @@
+# Salin ke android/key.properties (jangan commit). Buat keystore:
+#   keytool -genkey -v -keystore ~/laundryos.jks -keyalg RSA -keysize 2048 -validity 10000 -alias laundryos
+storePassword=ubah-ini
+keyPassword=ubah-ini
+keyAlias=laundryos
+storeFile=C:/path/ke/laundryos.jks
