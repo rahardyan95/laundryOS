@@ -25,18 +25,35 @@ saat request tanpa `Origin` (lihat `apps/api/API.md`).
 
 ```
 lib/
-├── main.dart
+├── main.dart               # bootstrap + AppDependencies
 └── src/
-    ├── api/          ApiClient (OOP singleton), SessionManager (secure storage)
-    ├── config/       AppConfig (API_BASE via dart-define)
-    ├── models/       Order, SessionPayload
-    └── screens/      login_screen, home_screen
+    ├── app.dart            # MaterialApp + AuthGate
+    ├── app_dependencies.dart
+    ├── api/                # ApiTransport (interface) + HttpApiTransport + ApiClient
+    ├── config/            # AppConfig (API_BASE via dart-define)
+    ├── lib/               # OrderMachine
+    ├── models/            # Order, OrderStatus, SessionPayload, Role, Outlet
+    ├── repositories/      # AuthRepository, OrderRepository
+    ├── state/             # AuthController, OrderController (ChangeNotifier)
+    └── screens/           # login_screen, home_screen
+```
+
+Arsitektur mengikuti R1 (OOP): transport & session store di balik interface, repository
+per domain, controller sebagai state, widget hanya UI. Dependency dikomposisikan di
+`AppDependencies` sehingga dapat diuji dengan fake.
+
+## Verifikasi
+
+```bash
+flutter analyze     # 0 issue
+flutter test        # unit + widget (fake transport, tanpa jaringan)
+flutter build apk --debug
 ```
 
 ## Roadmap (R4)
 
-1. Offline-first: SQLite + antrean sinkronisasi + indikator konflik.
+1. ~~Fondasi DI/OOP + auth token aman + paginasi~~ (selesai).
 2. Peran: dashboard owner, kasir POS, operator status, kurir tugas + foto GPS.
-3. Push notification (FCM) untuk order siap & tugas pickup.
-4. Kamera/lokasi izin, unggah bukti ke S3.
+3. Offline-first: SQLite + antrean sinkronisasi + indikator konflik.
+4. Push notification (FCM) untuk order siap & tugas pickup.
 5. Rilis Play Store/App Store, signing, crash reporting (Sentry), CI `flutter build`.
