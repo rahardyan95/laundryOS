@@ -1,0 +1,78 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+
+const plans = [
+  {
+    name: "Starter",
+    price: "Rp149rb",
+    tagline: "Untuk outlet tunggal yang baru mulai.",
+    points: ["1 outlet", "3 pengguna", "500 order/bulan", "Order, kas, laporan", "Notifikasi email + in-app"],
+    featured: false,
+  },
+  {
+    name: "Growth",
+    price: "Rp299rb",
+    tagline: "Paling pas untuk laundry yang sedang tumbuh.",
+    points: ["3 outlet", "10 pengguna", "2.000 order/bulan", "Antar-jemput + bukti foto", "Laporan CSV", "Pengingat pickup"],
+    featured: true,
+  },
+  {
+    name: "Multi-Outlet",
+    price: "Rp599rb",
+    tagline: "Untuk jaringan cabang dengan banyak staf.",
+    points: ["10 outlet", "50 pengguna", "10.000 order/bulan", "Semua fitur Growth", "Prioritas dukungan"],
+    featured: false,
+  },
+];
+---
+
+<BaseLayout
+  title="Harga — LaundryOS"
+  description="Paket langganan LaundryOS: Starter, Growth, dan Multi-Outlet. Bayar per outlet, tanpa biaya tersembunyi."
+  path="/harga"
+>
+  <section>
+    <div class="wrap" style="text-align: center;">
+      <p class="eyebrow">Harga</p>
+      <h1 class="hero" style="font-size: clamp(1.8rem, 4vw, 2.6rem);">Bayar sesuai skala outlet</h1>
+      <p style="color: var(--muted);">Semua paket termasuk pembaruan dan dukungan. Penagihan manual oleh admin.</p>
+    </div>
+  </section>
+
+  <section style="padding-top: 0;">
+    <div class="wrap">
+      <div class="grid grid-3">
+        {plans.map((plan) => (
+          <article
+            class="card"
+            style={plan.featured ? "border: 2px solid var(--pine); box-shadow: 0 10px 30px rgba(31,92,74,0.12);" : ""}
+          >
+            {plan.featured && (
+              <p class="eyebrow" style="margin-top: 0;">Paling populer</p>
+            )}
+            <h2 style="margin: 0.2rem 0;">{plan.name}</h2>
+            <p style="font-size: 1.6rem; font-weight: 800; margin: 0;">
+              {plan.price}<span style="font-size: 0.9rem; font-weight: 500; color: var(--muted);">/bulan</span>
+            </p>
+            <p style="color: var(--muted); min-height: 3rem;">{plan.tagline}</p>
+            <ul style="padding-left: 1.1rem; color: var(--ink);">
+              {plan.points.map((point) => <li>{point}</li>)}
+            </ul>
+            <a
+              class={plan.featured ? "btn btn-lime" : "btn btn-ghost"}
+              href={`${appUrl}/login`}
+              style="width: 100%; justify-content: center;"
+            >
+              Mulai {plan.name}
+            </a>
+          </article>
+        ))}
+      </div>
+      <p style="text-align: center; color: var(--muted); margin-top: 1.5rem;">
+        Butuh volume besar atau penagihan tahunan? Hubungi <a href="mailto:hello@laundryos.example">hello@laundryos.example</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

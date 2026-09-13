@@ -1,0 +1,126 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+
+const features = [
+  { title: "Order & ticket otomatis", body: "Buat order kiloan/satuan, nomor ticket unik per outlet, harga tersimpan sebagai snapshot." },
+  { title: "Status cucian real-time", body: "Diterima → dicuci → dikeringkan → disetrika → siap → selesai. Pelanggan bisa lacak sendiri." },
+  { title: "Antar-jemput + bukti foto", body: "Jadwalkan pickup/delivery, tugaskan kurir, unggah bukti pengantaran." },
+  { title: "Kas & tutup harian", body: "Catat pemasukan/pengeluaran, kunci tanggal kas, buka kembali dengan jejak audit." },
+  { title: "Notifikasi otomatis", body: "Email + in-app saat order baru dan siap diambil; pengingat pickup terjadwal." },
+  { title: "Laporan & CSV", body: "Ringkasan penjualan, servis terlaris, dan unduh CSV untuk pembukuan." },
+];
+
+const flow = [
+  "Terima order & cetak struk",
+  "Proses cuci bertahap",
+  "Antar-jemput terjadwal",
+  "Pelanggan lacak status",
+  "Kas tertutup rapi",
+  "Laporan siap unduh",
+];
+
+const roles = [
+  { title: "Pemilik", body: "Dashboard, laporan, langganan, dan kelola outlet." },
+  { title: "Manajer", body: "Semua operasional outlet: order, kas, staf." },
+  { title: "Kasir", body: "Buat order, terima pembayaran, catat kas." },
+  { title: "Operator", body: "Perbarui status cucian dari mesin ke mesin." },
+  { title: "Kurir", body: "Lihat tugas antar-jemput dan unggah bukti." },
+];
+
+const faq = [
+  { q: "Apakah butuh instalasi?", a: "Tidak. LaundryOS berjalan di browser; cukup masuk dan mulai mencatat order." },
+  { q: "Bisa multi-outlet?", a: "Ya. Paket Multi-Outlet mendukung beberapa cabang dalam satu langganan." },
+  { q: "Data aman?", a: "Setiap tenant terisolasi; akses berbasis peran, rate limit, dan audit log." },
+  { q: "Pelanggan bisa lacak tanpa login?", a: "Bisa, cukup nomor ticket dan nomor telepon terdaftar." },
+];
+---
+
+<BaseLayout
+  title="LaundryOS — Operasional laundry rapi setiap hari"
+  description="Aplikasi SaaS untuk laundry kiloan & satuan: order, status cucian, pelanggan, antar-jemput, kas, dan notifikasi dalam satu tempat."
+>
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">SaaS operasional UMKM</p>
+      <h1 class="hero">Operasional laundry,<br />rapi setiap hari.</h1>
+      <p style="max-width: 42rem; color: var(--muted); font-size: 1.05rem;">
+        Digitalisasi order, status cucian, pelanggan, antar-jemput, kas, dan notifikasi.
+        Tinggalkan catatan kertas dan rekap manual.
+      </p>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem;">
+        <a class="btn btn-primary" href={`${appUrl}/login`}>Coba sekarang</a>
+        <a class="btn btn-ghost" href="/harga">Lihat harga</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="fitur" style="background: #fff; border-block: 1px solid var(--line);">
+    <div class="wrap">
+      <p class="eyebrow">Fitur</p>
+      <h2>Semua yang dibutuhkan outlet Anda</h2>
+      <div class="grid grid-3" style="margin-top: 2rem;">
+        {features.map((f) => (
+          <article class="card">
+            <h3 style="margin-top: 0;">{f.title}</h3>
+            <p style="color: var(--muted); margin-bottom: 0;">{f.body}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="alur">
+    <div class="wrap">
+      <p class="eyebrow">Alur kerja</p>
+      <h2>Dari order sampai laporan</h2>
+      <div class="grid grid-3" style="margin-top: 2rem;">
+        {flow.map((step, i) => (
+          <div class="card">
+            <p style="font-weight: 700; color: var(--pine); margin: 0 0 0.4rem;">0{i + 1}</p>
+            <p style="margin: 0; font-weight: 600;">{step}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section style="background: var(--pine); color: #fff;">
+    <div class="wrap">
+      <p class="eyebrow" style="color: var(--lime);">Peran</p>
+      <h2 style="color: #fff;">Dibuat untuk setiap peran</h2>
+      <div class="grid grid-4" style="margin-top: 2rem;">
+        {roles.map((role) => (
+          <div class="card" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16);">
+            <h3 style="margin-top: 0; color: #fff;">{role.title}</h3>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 0;">{role.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" style="background: #fff; border-block: 1px solid var(--line);">
+    <div class="wrap">
+      <p class="eyebrow">FAQ</p>
+      <h2>Pertanyaan umum</h2>
+      <div class="grid" style="margin-top: 2rem;">
+        {faq.map((item) => (
+          <details class="card">
+            <summary style="font-weight: 700; cursor: pointer;">{item.q}</summary>
+            <p style="color: var(--muted); margin-bottom: 0;">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap" style="text-align: center;">
+      <h2>Siap merapikan operasional laundry?</h2>
+      <p style="color: var(--muted);">Mulai dari outlet pertama, tumbuh ke banyak cabang.</p>
+      <a class="btn btn-primary" href={`${appUrl}/login`}>Masuk ke aplikasi</a>
+    </div>
+  </section>
+</BaseLayout>
