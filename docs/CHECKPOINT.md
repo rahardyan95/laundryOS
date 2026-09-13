@@ -1,21 +1,23 @@
 # CHECKPOINT — LaundryOS
 
 **Terakhir diverifikasi:** 2026-09-13 · **Status: SEMUA GATE HIJAU** ✅
-Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.md`](superpowers/plans/2026-09-13-production-100.md) (M0–M3 selesai).
+Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.md`](superpowers/plans/2026-09-13-production-100.md) (M0–M8 selesai, M9 scaffold, M10 menunggu VPS).
 
-## Progres M0–M3 (2026-09-13)
+## Progres M0–M9 (2026-09-13)
 
 | Gate | Hasil |
 |---|---|
 | Backend `php artisan test` | 110 passed, 370 assertions |
 | `pint --test` | PASS, 145 files |
-| Frontend `vitest run` | 40 passed (9 files) |
+| Frontend `vitest run` | 51 passed (11 files) |
 | `tsc --noEmit` / `eslint src` | 0 error / 0 error |
-| `next build` | exit 0 |
-| Playwright E2E (Chromium, mock) | 16 passed |
-| `docker build -f apps/api/Dockerfile.prod` | exit 0 (php-fpm + opcache, non-root) |
+| `next build` | exit 0 (manifest/robots/sitemap/icon) |
+| Playwright E2E (Chromium, mock) | 18 passed |
+| `docker build` api & web prod | exit 0 (web serve HTTP 200 + CSP) |
+| Astro `astro check` / build | 0 error / 3 halaman |
+| `docker compose -f infra/docker-compose.prod.yml config` | valid |
 
-Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, global API rate limit, paritas mock↔Laravel, `phpunit.xml` hermetis, **auth httpOnly cookie Sanctum SPA**, refactor OOP logic layer, **image prod multi-stage + deep health + index DB + storage disk configurable + TrustProxies + log harian**.
+Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS (compose prod, nginx, backup, DEPLOY.md), apps/site Astro, scaffold apps/mobile Flutter.
 
 
 ## Verifikasi baseline (2026-09-04)
