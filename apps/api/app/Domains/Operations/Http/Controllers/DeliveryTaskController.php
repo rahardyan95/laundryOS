@@ -103,7 +103,7 @@ class DeliveryTaskController extends Controller
             'proof.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        $deliveryTask->proof_path = $request->file('proof')->store('proofs', 'public');
+        $deliveryTask->proof_path = $request->file('proof')->store('proofs', config('filesystems.proof_disk'));
         $deliveryTask->save();
 
         return new DeliveryTaskResource($deliveryTask->load(['order', 'driver']));
