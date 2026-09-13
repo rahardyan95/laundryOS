@@ -1,0 +1,19 @@
+{
+  "name": "laundryos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SaaS operasional UMKM — laundry kiloan/satuan (API Laravel + web Next.js)",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "lint": "pnpm --filter web lint",
+    "test": "pnpm --filter web test",
+    "test:e2e": "pnpm --filter web test:e2e",
+    "typecheck": "pnpm --filter web exec tsc --noEmit"
+  }
+}
