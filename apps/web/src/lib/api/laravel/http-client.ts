@@ -11,12 +11,29 @@ interface Paginated<T> {
 
 export class HttpClient {
   private readonly baseUrl: string;
+  private readonly origin: string;
 
   constructor(
     baseUrl: string,
-    private readonly getToken: () => string | null
+    private readonly getToken?: () => string | null
   ) {
     this.baseUrl = baseUrl.replace(/\/+$/, "");
+    try {
+      this.origin = new URL(this.baseUrl).origin;
+    } catch {
+      this.origin = this.baseUrl;
+    }
+  }
+
+  async csrf(): Promise<void> {
+    try {
+      await fetch(`${this.origin}/sanctum/csrf-cookie`, {
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+    } catch {
+      // Diabaikan: bila server tak terjangkau, request berikutnya akan gagal jelas.
+    }
   }
 
   async get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
@@ -32,16 +49,13 @@ export class HttpClient {
   }
 
   async postForm<T>(path: string, form: FormData): Promise<T> {
-    const token = this.getToken();
     let response: Response;
 
     try {
       response = await fetch(`${this.baseUrl}${path}`, {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
+        headers: this.headers(),
         body: form,
       });
     } catch {
@@ -68,15 +82,12 @@ export class HttpClient {
       if (suffix) url += `?${suffix}`;
     }
 
-    const token = this.getToken();
     let response: Response;
 
     try {
       response = await fetch(url, {
-        headers: {
-          Accept: "text/csv",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
+        headers: this.headers({ Accept: "text/csv" }),
       });
     } catch {
       throw new ApiError(0, "Tidak dapat terhubung ke server. Periksa koneksi.");
@@ -123,17 +134,13 @@ export class HttpClient {
       if (suffix) url += `?${suffix}`;
     }
 
-    const token = this.getToken();
     let response: Response;
 
     try {
       response = await fetch(url, {
         method,
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
+        headers: this.headers({ "Content-Type": "application/json" }),
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch {
@@ -148,6 +155,24 @@ export class HttpClient {
     if (response.status === 204) return undefined as T;
 
     return (await response.json()) as T;
+  }
+
+  private headers(extra: Record<string, string> = {}): Record<string, string> {
+    const headers: Record<string, string> = { Accept: "application/json", ...extra };
+
+    const token = this.getToken?.();
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const xsrf = HttpClient.xsrfToken();
+    if (xsrf) headers["X-XSRF-TOKEN"] = xsrf;
+
+    return headers;
+  }
+
+  private static xsrfToken(): string | null {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 
   private static notifyUnauthorized(status: number): void {

@@ -51,7 +51,7 @@ export class LaravelApiClient extends ApiClient {
     baseUrl: string = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1"
   ) {
     super();
-    this.http = new HttpClient(baseUrl, () => SessionManager.token());
+    this.http = new HttpClient(baseUrl);
   }
 
   private tenantId(): string {
@@ -73,12 +73,8 @@ export class LaravelApiClient extends ApiClient {
   }
 
   async login(email: string, password: string): Promise<SessionPayload> {
-    const res = await this.http.post<{ token: string; user: WireUser }>("/auth/login", {
-      email,
-      password,
-      device_name: "web",
-    });
-    SessionManager.setToken(res.token);
+    await this.http.csrf();
+    await this.http.post<{ user: WireUser }>("/auth/login", { email, password });
     const payload = await this.me();
     SessionManager.set(payload);
     return payload;
@@ -93,7 +89,6 @@ export class LaravelApiClient extends ApiClient {
   }
 
   async getMe(): Promise<SessionPayload | null> {
-    if (!SessionManager.token()) return null;
     try {
       const payload = await this.me();
       SessionManager.set(payload);

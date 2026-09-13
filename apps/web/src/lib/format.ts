@@ -32,4 +32,34 @@ export class Format {
       d.getDate() === ref.getDate()
     );
   }
+
+  static todayIso(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  static isoDaysAgo(days: number): string {
+    return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+  }
+
+  static initials(name: string): string {
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  }
+
+  static greeting(date: Date = new Date()): string {
+    const hour = date.getHours();
+    if (hour < 11) return "Selamat pagi";
+    if (hour < 15) return "Selamat siang";
+    if (hour < 19) return "Selamat sore";
+    return "Selamat malam";
+  }
+
+  static duration(hours: number): string {
+    if (hours >= 24 && hours % 24 === 0) return `${hours} jam (${hours / 24} hari)`;
+    return `${hours} jam`;
+  }
 }

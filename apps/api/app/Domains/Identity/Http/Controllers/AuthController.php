@@ -8,9 +8,12 @@ use App\Domains\Identity\Http\Resources\TenantResource;
 use App\Domains\Identity\Http\Resources\UserResource;
 use App\Domains\Identity\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 class AuthController extends Controller
 {
@@ -24,7 +27,16 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken($request->validated('device_name'), [$user->role->value])->plainTextToken;
+        if (EnsureFrontendRequestsAreStateful::fromFrontend($request)) {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+
+            return response()->json([
+                'user' => new UserResource($user),
+            ]);
+        }
+
+        $token = $user->createToken($request->validated('device_name') ?? 'api', [$user->role->value])->plainTextToken;
 
         return response()->json([
             'token' => $token,
@@ -32,16 +44,22 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        request()->user()->currentAccessToken()?->delete();
+        $request->user()?->currentAccessToken()?->delete();
+
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json(['message' => 'Berhasil keluar.']);
     }
 
-    public function me(): JsonResponse
+    public function me(Request $request): JsonResponse
     {
-        $user = request()->user();
+        $user = $request->user();
 
         return response()->json([
             'user' => new UserResource($user),

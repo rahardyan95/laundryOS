@@ -25,15 +25,11 @@ import { ApiError } from "@/lib/api/api-error";
 import type { ReportSummary } from "@/lib/api/types";
 import { Format } from "@/lib/format";
 
-function isoDaysAgo(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
-}
-
 export default function ReportsPage() {
   const { outletId } = useOutlet();
   const [summary, setSummary] = useState<ReportSummary | null>(null);
-  const [from, setFrom] = useState(isoDaysAgo(30));
-  const [to, setTo] = useState(isoDaysAgo(0));
+  const [from, setFrom] = useState(Format.isoDaysAgo(30));
+  const [to, setTo] = useState(Format.isoDaysAgo(0));
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");

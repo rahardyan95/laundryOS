@@ -7,11 +7,16 @@ Semua field memakai **snake_case**. Frontend memetakan ke camelCase di `LaravelA
 
 | Method | Endpoint | Auth | Keterangan |
 |---|---|---|---|
-| POST | `/auth/login` | — | `{email, password, device_name}` → `{token, user}`. 422 bila salah |
-| POST | `/auth/logout` | Sanctum | Revoke token aktif |
+| POST | `/auth/login` | — | SPA (Origin stateful) → set cookie sesi, balas `{user}`. Non-browser (tanpa Origin) → balas `{token, user}`. 422 bila salah |
+| POST | `/auth/logout` | Sanctum | Revoke token aktif + hancurkan sesi |
 | GET | `/auth/me` | Sanctum | `{user, tenant, outlets}` |
 
-Token: `Authorization: Bearer <token>`. Abilities token = `[role]` (metadata; enforcement di policies).
+**Web SPA (cookie):** panggil `GET /sanctum/csrf-cookie` (credentials include) sebelum login/ubah data,
+lalu kirim cookie sesi + header `X-XSRF-TOKEN`. CORS `supports_credentials=true`.
+Domain yang dianggap stateful diatur `SANCTUM_STATEFUL_DOMAINS`.
+
+**Mobile/API client (token):** `Authorization: Bearer <token>` dari respons login tanpa Origin.
+Abilities token = `[role]` (metadata; enforcement di policies).
 Throttle grup `api`: 60/menit per pengguna (atau per IP bila tamu). Login & `track` lebih ketat: 10/menit.
 
 ## Konvensi

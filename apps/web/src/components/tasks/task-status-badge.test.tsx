@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import {
-  nextTaskLabel,
-  nextTaskStatus,
-  TaskStatusBadge,
-} from "@/components/tasks/task-status-badge";
+import { TaskStatusBadge } from "@/components/tasks/task-status-badge";
+import { TaskMachine } from "@/lib/task-machine";
 
 describe("TaskStatusBadge", () => {
   it("menampilkan label task", () => {
@@ -13,11 +10,11 @@ describe("TaskStatusBadge", () => {
   });
 
   it("next label mengikuti alur task", () => {
-    expect(nextTaskStatus("pending")).toBe("assigned");
-    expect(nextTaskLabel("pending")).toBe("Tugaskan");
-    expect(nextTaskStatus("in_progress")).toBe("done");
-    expect(nextTaskLabel("in_progress")).toBe("Selesaikan");
-    expect(nextTaskStatus("done")).toBeNull();
-    expect(nextTaskLabel("done")).toBeNull();
+    expect(TaskMachine.next("pending")).toBe("assigned");
+    expect(TaskMachine.nextLabel("pending")).toBe("Tugaskan");
+    expect(TaskMachine.next("in_progress")).toBe("done");
+    expect(TaskMachine.nextLabel("in_progress")).toBe("Selesaikan");
+    expect(TaskMachine.next("done")).toBeNull();
+    expect(TaskMachine.nextLabel("done")).toBeNull();
   });
 });

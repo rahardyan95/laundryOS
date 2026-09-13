@@ -17,16 +17,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { api } from "@/lib/api/client";
 import type { SessionPayload } from "@/lib/api/types";
+import { Format } from "@/lib/format";
 import { NavPolicy } from "@/lib/nav-policy";
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 export function Topbar({
   session,
@@ -75,7 +67,7 @@ export function Topbar({
           {NavPolicy.roleLabel(session.user.role)}
         </span>
         <Avatar className="size-8">
-          <AvatarFallback>{initials(session.user.name)}</AvatarFallback>
+          <AvatarFallback>{Format.initials(session.user.name)}</AvatarFallback>
         </Avatar>
         <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Keluar">
           <LogOut className="size-4" aria-hidden />

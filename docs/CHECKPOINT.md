@@ -1,20 +1,21 @@
 # CHECKPOINT — LaundryOS
 
 **Terakhir diverifikasi:** 2026-09-13 · **Status: SEMUA GATE HIJAU** ✅
-Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.md`](superpowers/plans/2026-09-13-production-100.md) (M0 & M1 selesai).
+Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.md`](superpowers/plans/2026-09-13-production-100.md) (M0 & M1 & M2 selesai).
 
-## Progres M0–M1 (2026-09-13)
+## Progres M0–M2 (2026-09-13)
 
 | Gate | Hasil |
 |---|---|
-| Backend `php artisan test` | 109 passed, 363 assertions |
+| Backend `php artisan test` | 110 passed, 370 assertions |
 | `pint --test` | PASS, 143 files |
-| Frontend `vitest run` | 41 passed (9 files) |
+| Frontend `vitest run` | 40 passed (9 files) |
 | `tsc --noEmit` / `eslint src` | 0 error / 0 error |
 | `next build` | exit 0 |
 | Playwright E2E (Chromium, mock) | 16 passed |
 
-Perubahan utama: `.gitignore` produksi (skill/backups/vendor), root `package.json`, `.dockerignore`, role gate `/settings`, error/not-found/loading boundary, interceptor 401 global, pesan error asli di list page, global API rate limit 60/mnt, paritas mock↔Laravel, `phpunit.xml` hermetis.
+Perubahan utama: `.gitignore` produksi (skill/backups/vendor), root `package.json`, `.dockerignore`, role gate `/settings`, error/not-found/loading boundary, interceptor 401 global, pesan error asli di list page, global API rate limit 60/mnt, paritas mock↔Laravel, `phpunit.xml` hermetis, **auth httpOnly cookie Sanctum SPA** (login stateful → cookie sesi; non-browser → token), refactor OOP logic layer (`TaskMachine`, `PaymentPolicy`, `ApiClientFactory`).
+
 
 ## Verifikasi baseline (2026-09-04)
 

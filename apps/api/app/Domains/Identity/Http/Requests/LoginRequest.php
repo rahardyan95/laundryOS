@@ -16,7 +16,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
-            'device_name' => ['required', 'string', 'max:100'],
+            'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }
 
@@ -26,7 +26,6 @@ class LoginRequest extends FormRequest
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'password.required' => 'Kata sandi wajib diisi.',
-            'device_name.required' => 'Nama perangkat wajib diisi.',
         ];
     }
 }

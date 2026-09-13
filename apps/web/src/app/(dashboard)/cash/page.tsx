@@ -42,17 +42,13 @@ import type { CashEntry, CashEntryType, CashSummary, PaymentMethod } from "@/lib
 import { Format } from "@/lib/format";
 import { SessionManager } from "@/lib/api/session";
 
-function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 const categories = ["Laundry", "Deterjen", "Plastik & Kemasan", "Listrik & Air", "Gaji", "Sewa", "Lainnya"];
 
 export default function CashPage() {
   const { outletId } = useOutlet();
   const [entries, setEntries] = useState<CashEntry[]>([]);
   const [summary, setSummary] = useState<CashSummary | null>(null);
-  const [date, setDate] = useState(todayStr());
+  const [date, setDate] = useState(Format.todayIso());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);

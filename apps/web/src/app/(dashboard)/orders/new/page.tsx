@@ -28,6 +28,7 @@ import type {
   Service,
 } from "@/lib/api/types";
 import { Format } from "@/lib/format";
+import { PaymentPolicy } from "@/lib/payment-policy";
 import { SessionManager } from "@/lib/api/session";
 
 interface ItemDraft {
@@ -99,7 +100,7 @@ export default function NewOrderPage() {
 
   const total = pricedItems.reduce((sum, item) => sum + item.subtotal, 0);
   const paid = Number(paidAmount) || 0;
-  const payLabel = paid >= total && total > 0 ? "Lunas" : paid > 0 ? "DP" : "Belum Bayar";
+  const payLabel = PaymentPolicy.label(PaymentPolicy.status(paid, total));
 
   function updateItem(key: number, patch: Partial<ItemDraft>) {
     setItems((prev) => prev.map((item) => (item.key === key ? { ...item, ...patch } : item)));
@@ -107,17 +108,6 @@ export default function NewOrderPage() {
 
   function removeItem(key: number) {
     setItems((prev) => (prev.length === 1 ? prev : prev.filter((item) => item.key !== key)));
-  }
-
-  function paymentStatusForSubmit(): { valid: boolean; message: string } {
-    if (!customerId) return { valid: false, message: "Pilih pelanggan atau buat pelanggan baru." };
-    if (!pricedItems.some((item) => item.service && item.qty > 0)) {
-      return { valid: false, message: "Tambahkan minimal satu layanan dengan jumlah yang benar." };
-    }
-    if (paid < 0 || paid > total) {
-      return { valid: false, message: "Nominal dibayar harus antara Rp0 dan total order." };
-    }
-    return { valid: true, message: "" };
   }
 
   async function handleCreateCustomer() {
@@ -147,7 +137,12 @@ export default function NewOrderPage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const check = paymentStatusForSubmit();
+    const check = PaymentPolicy.validateDraft({
+      hasCustomer: Boolean(customerId),
+      hasItems: pricedItems.some((item) => item.service && item.qty > 0),
+      paid,
+      total,
+    });
     if (!check.valid) {
       setError(check.message);
       return;
