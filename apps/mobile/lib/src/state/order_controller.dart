@@ -65,6 +65,33 @@ class OrderController extends ChangeNotifier {
 
   Future<bool> cancel(Order order, {String? note}) => _mutate(() => _repository.cancel(order.id, note: note));
 
+  Future<Order?> create({
+    required String outletId,
+    required String customerId,
+    required List<({String serviceId, double qty})> items,
+    required int paidAmount,
+    String? paymentMethod,
+    String? note,
+  }) async {
+    try {
+      final order = await _repository.create(
+        outletId: outletId,
+        customerId: customerId,
+        items: items,
+        paidAmount: paidAmount,
+        paymentMethod: paymentMethod,
+        note: note,
+      );
+      _orders.insert(0, order);
+      notifyListeners();
+      return order;
+    } on ApiException catch (error) {
+      _error = error.message;
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<bool> _mutate(Future<Order> Function() action) async {
     try {
       final updated = await action();

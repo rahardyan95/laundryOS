@@ -23,6 +23,26 @@ class OrderRepository {
     return _api.cancelOrder(token, orderId, note: note);
   }
 
+  Future<Order> create({
+    required String outletId,
+    required String customerId,
+    required List<({String serviceId, double qty})> items,
+    required int paidAmount,
+    String? paymentMethod,
+    String? note,
+  }) async {
+    final token = await _requireToken();
+    return _api.createOrder(
+      token,
+      outletId: outletId,
+      customerId: customerId,
+      items: items,
+      paidAmount: paidAmount,
+      paymentMethod: paymentMethod,
+      note: note,
+    );
+  }
+
   Future<String> _requireToken() async {
     final token = await _tokenProvider();
     if (token == null) throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
