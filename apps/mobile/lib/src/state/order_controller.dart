@@ -85,6 +85,10 @@ class OrderController extends ChangeNotifier {
       _orders.insert(0, order);
       notifyListeners();
       return order;
+    } on QueuedOfflineException catch (error) {
+      _error = error.message;
+      notifyListeners();
+      return null;
     } on ApiException catch (error) {
       _error = error.message;
       notifyListeners();
@@ -101,6 +105,10 @@ class OrderController extends ChangeNotifier {
         notifyListeners();
       }
       return true;
+    } on QueuedOfflineException catch (error) {
+      _error = error.message;
+      notifyListeners();
+      return false;
     } on ApiException catch (error) {
       _error = error.message;
       notifyListeners();

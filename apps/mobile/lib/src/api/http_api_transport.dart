@@ -16,10 +16,11 @@ class HttpApiTransport implements ApiTransport {
   final Duration timeout;
   final http.Client _client;
 
-  Map<String, String> _headers(String? token) => {
+  Map<String, String> _headers(String? token, {String? idempotencyKey}) => {
         "Accept": "application/json",
         "Content-Type": "application/json",
         if (token != null) "Authorization": "Bearer $token",
+        if (idempotencyKey != null) "Idempotency-Key": idempotencyKey,
       };
 
   Uri _uri(String path, [Map<String, String>? query]) {
@@ -47,22 +48,22 @@ class HttpApiTransport implements ApiTransport {
   }
 
   @override
-  Future<ApiResponse> post(String path, {Object? body, String? token}) {
+  Future<ApiResponse> post(String path, {Object? body, String? token, String? idempotencyKey}) {
     return _send(
       () => _client.post(
         _uri(path),
-        headers: _headers(token),
+        headers: _headers(token, idempotencyKey: idempotencyKey),
         body: body == null ? null : jsonEncode(body),
       ),
     );
   }
 
   @override
-  Future<ApiResponse> patch(String path, {Object? body, String? token}) {
+  Future<ApiResponse> patch(String path, {Object? body, String? token, String? idempotencyKey}) {
     return _send(
       () => _client.patch(
         _uri(path),
-        headers: _headers(token),
+        headers: _headers(token, idempotencyKey: idempotencyKey),
         body: body == null ? null : jsonEncode(body),
       ),
     );

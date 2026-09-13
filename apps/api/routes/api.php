@@ -4,6 +4,7 @@ use App\Domains\Billing\Http\Controllers\SubscriptionController;
 use App\Domains\Catalog\Http\Controllers\CustomerController;
 use App\Domains\Catalog\Http\Controllers\ServiceController;
 use App\Domains\Identity\Http\Controllers\AuthController;
+use App\Domains\Identity\Http\Controllers\DeviceTokenController;
 use App\Domains\Identity\Http\Controllers\OutletController;
 use App\Domains\Identity\Http\Controllers\PasswordResetController;
 use App\Domains\Identity\Http\Controllers\UserController;
@@ -16,6 +17,7 @@ use App\Domains\Support\Http\Controllers\DashboardController;
 use App\Domains\Support\Http\Controllers\HealthController;
 use App\Domains\Support\Http\Controllers\NotificationController;
 use App\Domains\Support\Http\Controllers\ReportController;
+use App\Domains\Support\Http\Middleware\EnsureIdempotency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,9 +39,11 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
     Route::post('/track', [TrackController::class, 'show'])->middleware('throttle:10,1');
 
-    Route::middleware(['auth:sanctum', EnsureSubscriptionActive::class])->group(function (): void {
+    Route::middleware(['auth:sanctum', EnsureSubscriptionActive::class, EnsureIdempotency::class])->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
+        Route::post('/auth/device-token', [DeviceTokenController::class, 'store']);
+        Route::delete('/auth/device-token', [DeviceTokenController::class, 'destroy']);
 
         Route::get('/subscription', [SubscriptionController::class, 'show']);
         Route::patch('/subscription', [SubscriptionController::class, 'update']);

@@ -4,6 +4,7 @@ import "package:provider/provider.dart";
 import "../models/role.dart";
 import "../state/auth_controller.dart";
 import "../state/connectivity_controller.dart";
+import "../state/sync_controller.dart";
 import "dashboard_screen.dart";
 import "notifications_screen.dart";
 import "orders_screen.dart";
@@ -30,21 +31,22 @@ class _HomeShellState extends State<HomeShell> {
     final offline = context.select<ConnectivityController, bool>(
       (connectivity) => !connectivity.isOnline,
     );
+    final sync = context.watch<SyncController>();
+    final banner = _bannerText(offline, sync);
 
     return Scaffold(
       body: Column(
         children: [
-          if (offline)
+          if (banner != null)
             Material(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: const SizedBox(
+              color: offline
+                  ? Theme.of(context).colorScheme.errorContainer
+                  : Theme.of(context).colorScheme.secondaryContainer,
+              child: SizedBox(
                 width: double.infinity,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                  child: Text(
-                    "Mode offline — menampilkan data terakhir.",
-                    textAlign: TextAlign.center,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                  child: Text(banner, textAlign: TextAlign.center),
                 ),
               ),
             ),
@@ -64,6 +66,17 @@ class _HomeShellState extends State<HomeShell> {
             .toList(),
       ),
     );
+  }
+
+  String? _bannerText(bool offline, SyncController sync) {
+    if (offline) {
+      return sync.pending > 0
+          ? "Mode offline — ${sync.pending} perubahan menunggu sinkron."
+          : "Mode offline — menampilkan data terakhir.";
+    }
+    if (sync.syncing) return "Menyinkronkan perubahan…";
+    if (sync.pending > 0) return "${sync.pending} perubahan menunggu sinkron.";
+    return null;
   }
 
   List<_Tab> _tabsFor(Role role) {

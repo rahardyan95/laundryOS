@@ -2,6 +2,8 @@ import "api/api_client.dart";
 import "api/api_transport.dart";
 import "api/caching_api_transport.dart";
 import "api/http_api_transport.dart";
+import "api/mutation_queue.dart";
+import "api/offline_api_transport.dart";
 import "api/offline_cache.dart";
 import "api/session_store.dart";
 import "config/app_config.dart";
@@ -18,6 +20,7 @@ import "state/dashboard_controller.dart";
 import "state/delivery_task_controller.dart";
 import "state/notification_controller.dart";
 import "state/order_controller.dart";
+import "state/sync_controller.dart";
 
 /// Titik komposisi dependency. Test dapat menyuntikkan transport/session store
 /// palsu lewat konstruktor.
@@ -26,14 +29,19 @@ class AppDependencies {
     ApiTransport? transport,
     SessionStore? store,
     OfflineCache? offlineCache,
+    MutationQueue? mutationQueue,
   })  : store = store ?? SecureSessionStore(),
         offlineCache = offlineCache ?? SharedPrefsOfflineCache(),
-        transport = transport ??
+        mutationQueue = mutationQueue ?? SharedPrefsMutationQueue(),
+        _innerTransport = transport ??
             CachingApiTransport(
               HttpApiTransport(baseUrl: AppConfig.apiBaseUrl),
               offlineCache ?? SharedPrefsOfflineCache(),
             ) {
-    api = ApiClient(this.transport);
+    offlineTransport = OfflineApiTransport(_innerTransport, this.mutationQueue, this.store.token);
+    this.transport = offlineTransport;
+
+    api = ApiClient(offlineTransport);
 
     final token = this.store.token;
 
@@ -51,11 +59,16 @@ class AppDependencies {
     notificationController = NotificationController(notificationRepository);
     dashboardController = DashboardController(dashboardRepository);
     connectivityController = ConnectivityController();
+    syncController = SyncController(offlineTransport, connectivityController);
   }
 
-  final ApiTransport transport;
+  final ApiTransport _innerTransport;
   final SessionStore store;
   final OfflineCache offlineCache;
+  final MutationQueue mutationQueue;
+
+  late final OfflineApiTransport offlineTransport;
+  late final ApiTransport transport;
 
   late final ApiClient api;
   late final AuthRepository authRepository;
@@ -72,4 +85,5 @@ class AppDependencies {
   late final NotificationController notificationController;
   late final DashboardController dashboardController;
   late final ConnectivityController connectivityController;
+  late final SyncController syncController;
 }

@@ -32,12 +32,14 @@ abstract class ApiTransport {
     String path, {
     Object? body,
     String? token,
+    String? idempotencyKey,
   });
 
   Future<ApiResponse> patch(
     String path, {
     Object? body,
     String? token,
+    String? idempotencyKey,
   });
 
   Future<ApiResponse> postMultipart(
