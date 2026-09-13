@@ -1,8 +1,8 @@
 # LaundryOS Mobile (Flutter)
 
-Aplikasi mobile untuk **owner, staf, dan kurir**. Status fase: **scaffold** — kode di sini
-belum dijalankan/diverifikasi karena Flutter SDK belum terpasang di lingkungan build.
-Jalankan `flutter analyze` + `flutter test` sebelum dianggap siap.
+Aplikasi mobile untuk **owner, staf, dan kurir**. Status fase: **analyze + test hijau**
+(Flutter stable 3.47.4 / Dart 3.13.3). Build APK/IPA dan rilis toko belum dilakukan
+(butuh Android SDK/Xcode + akun store).
 
 ## Prasyarat
 
