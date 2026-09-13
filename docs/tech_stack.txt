@@ -1,0 +1,2 @@
+ID	Nama Aplikasi	Target UMKM	Kategori	Masalah Utama	Tech Stack Utama	Astro untuk Website?	Prioritas	Fitur Inti	Model Monetisasi	Kompleksitas	Potensi SaaS
+1	LaundryOS	Laundry kiloan & satuan	Laundry	Order, status cucian, pelanggan dan kas masih manual	Laravel + Flutter	Ya	High	Order ticket; status proses; pickup/delivery; pelanggan; kas; notifikasi	Subscription per outlet	Medium	High

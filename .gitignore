@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Backups (jangan pernah commit dump DB)
+infra/backups/
+*.sql.gz
+
+# Vendor skill/tool repos (besar, pihak ketiga)
+skill/
+
+# Config agen lokal
+.commandcode/
+
+# PHP
+vendor/
+.phpunit.result.cache
