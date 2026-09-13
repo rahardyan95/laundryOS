@@ -7,17 +7,22 @@ Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.m
 
 | Gate | Hasil |
 |---|---|
-| Backend `php artisan test` | 110 passed, 370 assertions |
-| `pint --test` | PASS, 145 files |
+| Backend `php artisan test` | 116 passed, 388 assertions |
+| `pint --test` | PASS, 156 files |
+| `phpstan analyse` (Larastan L5) | 0 errors (baseline) |
+| Backend coverage (pcov) | 92.5% (gate min 90) |
 | Frontend `vitest run` | 51 passed (11 files) |
 | `tsc --noEmit` / `eslint src` | 0 error / 0 error |
 | `next build` | exit 0 (manifest/robots/sitemap/icon) |
 | Playwright E2E (Chromium, mock) | 18 passed |
+| Playwright E2E (Laravel nyata) | 2 passed (cookie httpOnly) |
+| Visual regression (win32, opt-in) | baseline tersimpan |
 | `docker build` api & web prod | exit 0 (web serve HTTP 200 + CSP) |
 | Astro `astro check` / build | 0 error / 3 halaman |
+| Flutter `analyze` / `test` | 0 issue / 3 test |
 | `docker compose -f infra/docker-compose.prod.yml config` | valid |
 
-Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS (compose prod, nginx, backup, DEPLOY.md), apps/site Astro, scaffold apps/mobile Flutter.
+Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS, apps/site Astro, apps/mobile Flutter, password reset, factory 7 model, Larastan, Sentry, coverage gate, E2E Laravel nyata, k6, visual regression.
 
 
 ## Verifikasi baseline (2026-09-04)

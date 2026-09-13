@@ -4,6 +4,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev libicu-dev libzip-dev libonig-dev libpng-dev libjpeg-dev unzip \
     && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install pdo_pgsql mbstring bcmath pcntl zip intl gd \
+    && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
+    && pecl install pcov \
+    && docker-php-ext-enable pcov \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

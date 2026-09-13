@@ -10,8 +10,10 @@ use App\Domains\Operations\Enums\CashEntryType;
 use App\Domains\Operations\Policies\CashPolicy;
 use App\Domains\Ordering\Enums\PaymentMethod;
 use App\Domains\Ordering\Models\Order;
+use Database\Factories\CashEntryFactory;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -19,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[UsePolicy(CashPolicy::class)]
 class CashEntry extends Model
 {
+    /** @use HasFactory<CashEntryFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'tenant_id', 'outlet_id', 'order_id', 'created_by_id', 'type',
         'category', 'amount', 'payment_method', 'note', 'occurred_at',
@@ -56,5 +61,10 @@ class CashEntry extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_id');
+    }
+
+    protected static function newFactory(): CashEntryFactory
+    {
+        return CashEntryFactory::new();
     }
 }

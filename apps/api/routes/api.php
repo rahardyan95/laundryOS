@@ -5,6 +5,7 @@ use App\Domains\Catalog\Http\Controllers\CustomerController;
 use App\Domains\Catalog\Http\Controllers\ServiceController;
 use App\Domains\Identity\Http\Controllers\AuthController;
 use App\Domains\Identity\Http\Controllers\OutletController;
+use App\Domains\Identity\Http\Controllers\PasswordResetController;
 use App\Domains\Identity\Http\Controllers\UserController;
 use App\Domains\Identity\Http\Middleware\EnsureSubscriptionActive;
 use App\Domains\Operations\Http\Controllers\CashController;
@@ -32,6 +33,8 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class);
 
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:10,1');
+    Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
     Route::post('/track', [TrackController::class, 'show'])->middleware('throttle:10,1');
 
     Route::middleware(['auth:sanctum', EnsureSubscriptionActive::class])->group(function (): void {

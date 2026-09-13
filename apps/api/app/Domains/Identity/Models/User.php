@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Identity\Enums\Role;
+use App\Domains\Identity\Notifications\ResetPasswordNotification;
 use App\Domains\Identity\Policies\UserPolicy;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -44,5 +45,10 @@ class User extends Authenticatable
     public function outlet(): BelongsTo
     {
         return $this->belongsTo(Outlet::class);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }
