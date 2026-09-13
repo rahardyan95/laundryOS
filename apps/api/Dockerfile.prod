@@ -1,0 +1,64 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# Stage 1 — vendor: install dependency produksi tanpa dev, autoload optimal.
+# ---------------------------------------------------------------------------
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --prefer-dist \
+    --no-scripts \
+    --no-autoloader
+
+COPY . .
+RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
+
+# ---------------------------------------------------------------------------
+# Stage 2 — base runtime: PHP-FPM + ekstensi + opcache.
+# ---------------------------------------------------------------------------
+FROM php:8.4-fpm AS base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libpq-dev libicu-dev libzip-dev libonig-dev libpng-dev libjpeg-dev unzip \
+    && docker-php-ext-configure gd --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo_pgsql mbstring bcmath pcntl zip intl gd opcache \
+    && apt-get purge -y --auto-remove \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY docker/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY docker/prod-entrypoint.sh /usr/local/bin/prod-entrypoint.sh
+RUN chmod +x /usr/local/bin/prod-entrypoint.sh
+
+WORKDIR /var/www
+
+# ---------------------------------------------------------------------------
+# Stage 3 — prod: source + vendor, non-root, healthcheck.
+# ---------------------------------------------------------------------------
+FROM base AS prod
+
+COPY --from=vendor --chown=www-data:www-data /app /var/www
+
+RUN mkdir -p \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache public
+
+USER www-data
+
+EXPOSE 9000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD php -r "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"
+
+ENTRYPOINT ["prod-entrypoint.sh"]
+CMD ["php-fpm"]

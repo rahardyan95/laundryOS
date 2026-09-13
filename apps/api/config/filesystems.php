@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Proof Upload Disk
+    |--------------------------------------------------------------------------
+    |
+    | Disk untuk foto bukti antar-jemput. Default "public" (lokal + symlink);
+    | set FILESYSTEM_PROOF_DISK=s3 di produksi agar aman untuk banyak instance.
+    |
+    */
+
+    'proof_disk' => env('FILESYSTEM_PROOF_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

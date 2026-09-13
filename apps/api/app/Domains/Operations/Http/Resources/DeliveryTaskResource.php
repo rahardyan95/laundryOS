@@ -17,7 +17,7 @@ class DeliveryTaskResource extends JsonResource
             'scheduled_at' => $this->scheduled_at?->toIso8601String(),
             'address' => $this->address,
             'notes' => $this->notes,
-            'proof_url' => $this->proof_path ? Storage::disk('public')->url($this->proof_path) : null,
+            'proof_url' => $this->proof_path ? Storage::disk(config('filesystems.proof_disk'))->url($this->proof_path) : null,
             'completed_at' => $this->completed_at?->toIso8601String(),
             'order' => $this->whenLoaded('order', fn () => [
                 'id' => $this->order->id,

@@ -12,6 +12,7 @@ use App\Domains\Operations\Http\Controllers\DeliveryTaskController;
 use App\Domains\Ordering\Http\Controllers\OrderController;
 use App\Domains\Ordering\Http\Controllers\TrackController;
 use App\Domains\Support\Http\Controllers\DashboardController;
+use App\Domains\Support\Http\Controllers\HealthController;
 use App\Domains\Support\Http\Controllers\NotificationController;
 use App\Domains\Support\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function (): void {
-    Route::get('/health', fn () => ['status' => 'ok']);
+    Route::get('/health', HealthController::class);
 
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::post('/track', [TrackController::class, 'show'])->middleware('throttle:10,1');
