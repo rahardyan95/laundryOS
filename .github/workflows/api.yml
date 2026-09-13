@@ -33,5 +33,11 @@ jobs:
       - name: Code style
         run: docker compose run --rm -T api php vendor/bin/pint --test
 
+      - name: Static analysis
+        run: docker compose run --rm -T api php vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
       - name: Test suite
         run: docker compose run --rm -T api php artisan test
+
+      - name: Coverage gate
+        run: docker compose run --rm -T api php artisan test --coverage --min=90

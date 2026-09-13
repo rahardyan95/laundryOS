@@ -10,8 +10,10 @@ use App\Domains\Operations\Enums\DeliveryTaskStatus;
 use App\Domains\Operations\Enums\DeliveryTaskType;
 use App\Domains\Operations\Policies\DeliveryTaskPolicy;
 use App\Domains\Ordering\Models\Order;
+use Database\Factories\DeliveryTaskFactory;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -19,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[UsePolicy(DeliveryTaskPolicy::class)]
 class DeliveryTask extends Model
 {
+    /** @use HasFactory<DeliveryTaskFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'tenant_id', 'outlet_id', 'order_id', 'driver_id', 'type',
         'scheduled_at', 'address', 'status', 'proof_path', 'notes', 'completed_at',
@@ -52,5 +57,10 @@ class DeliveryTask extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    protected static function newFactory(): DeliveryTaskFactory
+    {
+        return DeliveryTaskFactory::new();
     }
 }

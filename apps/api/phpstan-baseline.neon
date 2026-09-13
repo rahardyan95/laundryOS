@@ -1,0 +1,595 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Domains/Billing/Actions/PlanLimits.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$plan\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Billing/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\CustomerResource\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\CustomerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\CustomerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\CustomerResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\CustomerResource\:\:\$outlet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\CustomerResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\ServiceResource\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/ServiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\ServiceResource\:\:\$estimated_hours\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/ServiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\ServiceResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/ServiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\ServiceResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/ServiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\ServiceResource\:\:\$price_per_unit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/ServiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Catalog\\Http\\Resources\\ServiceResource\:\:\$unit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Catalog/Http/Resources/ServiceResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$outlets\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Domains/Identity/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Parameter \#1 \$tenant of method App\\Domains\\Billing\\Actions\\PlanLimits\:\:checkOutlet\(\) expects App\\Domains\\Identity\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Identity/Http/Controllers/OutletController.php
+
+		-
+			message: '#^Parameter \#1 \$tenant of method App\\Domains\\Billing\\Actions\\PlanLimits\:\:checkUser\(\) expects App\\Domains\\Identity\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Identity/Http/Controllers/UserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Middleware/EnsureSubscriptionActive.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\OutletResource\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/OutletResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\OutletResource\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/OutletResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\OutletResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/OutletResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\OutletResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/OutletResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\OutletResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/OutletResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\TenantResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/TenantResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\TenantResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/TenantResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\TenantResource\:\:\$plan\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/TenantResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\TenantResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/TenantResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$outlet\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$outlet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Identity\\Http\\Resources\\UserResource\:\:\$tenant_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Identity/Http/Resources/UserResource.php
+
+		-
+			message: '#^Attribute class Illuminate\\Database\\Eloquent\\Attributes\\Hidden does not have the property target\.$#'
+			identifier: attribute.target
+			count: 1
+			path: app/Domains/Identity/Models/User.php
+
+		-
+			message: '#^Cannot call method next\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Operations/Http/Controllers/DeliveryTaskController.php
+
+		-
+			message: '#^Property App\\Domains\\Operations\\Models\\DeliveryTask\:\:\$status \(string\) does not accept App\\Domains\\Operations\\Enums\\DeliveryTaskStatus\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Domains/Operations/Http/Controllers/DeliveryTaskController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$occurred_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$order_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$outlet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$payment_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Domains\\Operations\\Http\\Resources\\CashEntryResource\:\:balanceImpact\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/CashEntryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$completed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$driver\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$order\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$proof_path\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$scheduled_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Operations\\Http\\Resources\\DeliveryTaskResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Operations/Http/Resources/DeliveryTaskResource.php
+
+		-
+			message: '#^Property App\\Domains\\Ordering\\Models\\Order\:\:\$status \(string\) does not accept App\\Domains\\Ordering\\Enums\\OrderStatus\:\:Cancelled\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Domains/Ordering/Actions/CancelOrder.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Domains/Ordering/Actions/CreateOrder.php
+
+		-
+			message: '#^Parameter \#1 \$tenant of method App\\Domains\\Billing\\Actions\\PlanLimits\:\:checkOrderVolume\(\) expects App\\Domains\\Identity\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domains/Ordering/Actions/CreateOrder.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Domains/Ordering/Actions/TransitionOrderStatus.php
+
+		-
+			message: '#^Cannot call method next\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Ordering/Actions/TransitionOrderStatus.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$qty\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$service_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$to_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domains/Ordering/Http/Controllers/TrackController.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$completed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$customer\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$delivery_requested\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$estimated_done_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$history\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$outlet_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$paid_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$payment_method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$payment_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$pickup_requested\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$ticket\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Domains\\Ordering\\Http\\Resources\\OrderResource\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Ordering/Http/Resources/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Support/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Support/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domains\\Ordering\\Models\\Order\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domains/Support/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Support/Notifications/OrderNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ticket\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domains/Support/Notifications/PickupTaskNotification.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Domains/Support/Notifications/PickupTaskNotification.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Support/Notifications/PickupTaskNotification.php
+
+		-
+			message: '#^Cannot call method isBefore\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Support/Notifications/PickupTaskNotification.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domains/Support/Notifications/PickupTaskNotification.php
