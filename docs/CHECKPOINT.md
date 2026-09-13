@@ -1,7 +1,7 @@
 # CHECKPOINT — LaundryOS
 
 **Terakhir diverifikasi:** 2026-09-13 · **Status: SEMUA GATE HIJAU** ✅
-Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.md`](superpowers/plans/2026-09-13-production-100.md) (M0–M8 selesai, M9 scaffold, M10 menunggu VPS).
+Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.md`](superpowers/plans/2026-09-13-production-100.md) (M0–M9 selesai; M10 menunggu VPS).
 
 ## Progres M0–M9 (2026-09-13)
 
@@ -19,10 +19,11 @@ Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.m
 | Visual regression (win32, opt-in) | baseline tersimpan |
 | `docker build` api & web prod | exit 0 (web serve HTTP 200 + CSP) |
 | Astro `astro check` / build | 0 error / 3 halaman |
-| Flutter `analyze` / `test` | 0 issue / 3 test |
+| Flutter `analyze` / `test` | 0 issue / 22 test |
+| Flutter `build apk --debug` | exit 0 (app-debug.apk) |
 | `docker compose -f infra/docker-compose.prod.yml config` | valid |
 
-Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS, apps/site Astro, apps/mobile Flutter, password reset, factory 7 model, Larastan, Sentry, coverage gate, E2E Laravel nyata, k6, visual regression.
+Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS, apps/site Astro, password reset, factory 7 model, Larastan, Sentry, coverage gate, E2E Laravel nyata, k6, visual regression, **mobile Flutter M9a–M9c** (platform android/ios, DI/OOP, auth aman, fitur per peran, offline baca, Sentry, signing).
 
 
 ## Verifikasi baseline (2026-09-04)
