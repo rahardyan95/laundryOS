@@ -33,13 +33,14 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { TaskStatusBadge, nextTaskLabel, nextTaskStatus } from "@/components/tasks/task-status-badge";
+import { TaskStatusBadge } from "@/components/tasks/task-status-badge";
 import { useOutlet } from "@/components/layout/outlet-context";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/api-error";
 import type { DeliveryTask, DeliveryTaskType, Order, User } from "@/lib/api/types";
 import { Format } from "@/lib/format";
 import { SessionManager } from "@/lib/api/session";
+import { TaskMachine } from "@/lib/task-machine";
 
 export default function TasksPage() {
   const { outletId } = useOutlet();
@@ -126,7 +127,7 @@ export default function TasksPage() {
   }
 
   async function handleAdvance(task: DeliveryTask) {
-    const next = nextTaskStatus(task.status);
+    const next = TaskMachine.next(task.status);
     if (!next) return;
     setActingId(task.id);
     setError("");
@@ -212,8 +213,8 @@ export default function TasksPage() {
             </TableHeader>
             <TableBody>
               {tasks.map((task) => {
-                const label = nextTaskLabel(task.status);
-                const next = nextTaskStatus(task.status);
+                const label = TaskMachine.nextLabel(task.status);
+                const next = TaskMachine.next(task.status);
                 return (
                   <TableRow key={task.id}>
                     <TableCell className="text-sm">

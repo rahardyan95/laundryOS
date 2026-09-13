@@ -14,14 +14,6 @@ import type { DashboardSummary } from "@/lib/api/types";
 import { Format } from "@/lib/format";
 import { SessionManager } from "@/lib/api/session";
 
-function greeting(date: Date = new Date()): string {
-  const hour = date.getHours();
-  if (hour < 11) return "Selamat pagi";
-  if (hour < 15) return "Selamat siang";
-  if (hour < 19) return "Selamat sore";
-  return "Selamat malam";
-}
-
 export default function DashboardPage() {
   const { outletId } = useOutlet();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -93,7 +85,7 @@ export default function DashboardPage() {
           {outletName ? ` · ${outletName}` : ""}
         </p>
         <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight">
-          {greeting()}
+          {Format.greeting()}
           {firstName ? `, ${firstName}` : ""}!
         </h1>
       </div>

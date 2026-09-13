@@ -45,11 +45,6 @@ const units: { value: ServiceUnit; label: string }[] = [
   { value: "pasang", label: "Pasang" },
 ];
 
-function estimateLabel(hours: number): string {
-  if (hours >= 24 && hours % 24 === 0) return `${hours} jam (${hours / 24} hari)`;
-  return `${hours} jam`;
-}
-
 export default function CatalogPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -204,7 +199,7 @@ export default function CatalogPage() {
                     {Format.rupiah(service.pricePerUnit)}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {estimateLabel(service.estimatedHours)}
+                    {Format.duration(service.estimatedHours)}
                   </TableCell>
                   <TableCell>
                     {service.active ? (

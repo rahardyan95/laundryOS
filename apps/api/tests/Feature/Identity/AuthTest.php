@@ -32,6 +32,27 @@ class AuthTest extends TestCase
             ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'role']]);
     }
 
+    public function test_login_dari_spa_memakai_sesi_tanpa_token(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $user = User::factory()->forTenant($tenant)->create([
+            'email' => 'owner@laundryos.test',
+            'password' => 'rahasia123',
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => 'owner@laundryos.test',
+            'password' => 'rahasia123',
+        ], ['Origin' => 'http://localhost:3000']);
+
+        $response->assertOk()
+            ->assertJsonPath('user.email', $user->email)
+            ->assertJsonMissingPath('token');
+
+        $this->assertAuthenticatedAs($user, 'web');
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
     public function test_login_dengan_password_salah_ditolak(): void
     {
         $tenant = Tenant::factory()->create();

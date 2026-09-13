@@ -22,7 +22,6 @@ describe("SessionManager", () => {
 
   it("get null saat belum login", () => {
     expect(SessionManager.get()).toBeNull();
-    expect(SessionManager.token()).toBeNull();
     expect(SessionManager.outletId()).toBeNull();
   });
 
@@ -37,20 +36,11 @@ describe("SessionManager", () => {
     expect(SessionManager.outletId("olt-9")).toBe("olt-2");
   });
 
-  it("token set lalu clear terhapus", () => {
-    SessionManager.setToken("abc123");
-    expect(SessionManager.token()).toBe("abc123");
-    SessionManager.setToken(null);
-    expect(SessionManager.token()).toBeNull();
-  });
-
-  it("clear menghapus sesi, outlet, dan token sekaligus", () => {
+  it("clear menghapus sesi dan outlet sekaligus", () => {
     SessionManager.set(payload);
     SessionManager.setOutletId("olt-2");
-    SessionManager.setToken("abc123");
     SessionManager.clear();
     expect(SessionManager.get()).toBeNull();
     expect(SessionManager.outletId()).toBeNull();
-    expect(SessionManager.token()).toBeNull();
   });
 });
