@@ -13,11 +13,11 @@ class ThrowingTransport implements ApiTransport {
   }
 
   @override
-  Future<ApiResponse> post(String path, {Object? body, String? token}) async =>
+  Future<ApiResponse> post(String path, {Object? body, String? token, String? idempotencyKey}) async =>
       throw NetworkException();
 
   @override
-  Future<ApiResponse> patch(String path, {Object? body, String? token}) async =>
+  Future<ApiResponse> patch(String path, {Object? body, String? token, String? idempotencyKey}) async =>
       throw NetworkException();
 
   @override

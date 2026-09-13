@@ -62,24 +62,27 @@ flutter build apk --debug   # build/app/outputs/flutter-apk/app-debug.apk
 
 ## Offline & observability
 
-- **Offline baca-saja**: `CachingApiTransport` menyimpan respons GET sukses ke
-  `shared_preferences`; saat `NetworkException`, respons terakhir dipakai. Banner offline
-  muncul via `ConnectivityController` (connectivity_plus).
+- **Offline baca**: `CachingApiTransport` menyimpan respons GET sukses ke `shared_preferences`;
+  saat `NetworkException`, respons terakhir dipakai.
+- **Offline tulis**: `OfflineApiTransport` menyimpan mutasi gagal ke `MutationQueue`
+  (dengan `Idempotency-Key`) dan mengirim ulang saat online (`SyncController.flush`).
+  Server memakai key itu agar tidak dobel.
+- **Banner**: status offline / jumlah perubahan menunggu / sedang menyinkronkan.
 - **Sentry**: aktif bila `--dart-define=SENTRY_DSN=...` diisi (default no-op).
 - **Signing**: sediakan `android/key.properties` (lihat `key.properties.example`); build
   release memakai keystore itu, fallback debug bila tidak ada.
 
 ## Belum (butuh kredensial/infra eksternal)
 
-- **Push FCM**: butuh Firebase project + `google-services.json`/`GoogleService-Info.plist`
-  dan endpoint simpan device token di backend.
-- **Antrean tulis offline**: butuh idempotency key di backend agar mutasi aman di-retry.
+- **Push FCM**: backend punya endpoint `/auth/device-token` + `PushNotifier`; sisi mobile
+  masih perlu paket `firebase_messaging` + `google-services.json`/`GoogleService-Info.plist`
+  dari Firebase project, lalu panggil endpoint saat token tersedia.
 - **Rilis toko**: butuh akun Play Console/App Store + signing produksi.
 
 ## Roadmap (R4)
 
 1. ~~Fondasi DI/OOP + auth token aman + paginasi~~ (selesai).
 2. ~~Fitur per peran: dashboard, POS, operator, kurir + bukti~~ (selesai).
-3. ~~Offline baca + banner + Sentry + signing scaffold~~ (selesai); antrean tulis menyusul.
-4. Push notification (FCM) untuk order siap & tugas pickup.
+3. ~~Offline baca+tulis, Sentry, signing scaffold~~ (selesai).
+4. Push notification (FCM) — backend siap, sisi mobile menunggu Firebase project.
 5. Rilis Play Store/App Store.

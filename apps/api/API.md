@@ -10,6 +10,8 @@ Semua field memakai **snake_case**. Frontend memetakan ke camelCase di `LaravelA
 | POST | `/auth/login` | — | SPA (Origin stateful) → set cookie sesi, balas `{user}`. Non-browser (tanpa Origin) → balas `{token, user}`. 422 bila salah |
 | POST | `/auth/logout` | Sanctum | Revoke token aktif + hancurkan sesi |
 | GET | `/auth/me` | Sanctum | `{user, tenant, outlets}` |
+| POST | `/auth/device-token` | Sanctum | Daftarkan token push `{token, platform}` |
+| DELETE | `/auth/device-token` | Sanctum | Hapus token push `{token}` |
 
 **Web SPA (cookie):** panggil `GET /sanctum/csrf-cookie` (credentials include) sebelum login/ubah data,
 lalu kirim cookie sesi + header `X-XSRF-TOKEN`. CORS `supports_credentials=true`.
@@ -17,6 +19,13 @@ Domain yang dianggap stateful diatur `SANCTUM_STATEFUL_DOMAINS`.
 
 **Mobile/API client (token):** `Authorization: Bearer <token>` dari respons login tanpa Origin.
 Abilities token = `[role]` (metadata; enforcement di policies).
+
+**Idempotency (mobile offline):** kirim header `Idempotency-Key` pada mutasi (POST/PUT/PATCH/DELETE).
+Request berulang dengan key sama mengembalikan respons tersimpan (header `Idempotency-Replayed: true`)
+sehingga sinkronisasi ulang aman. Key dibatasi per pengguna; rekaman >24 jam dipangkas otomatis.
+
+**Push:** `PushNotifier` (default `LogPushNotifier`; ganti binding ke provider FCM di produksi).
+Order baru/siap & penugasan kurir memicu push ke device token pengguna terkait.
 Throttle grup `api`: 60/menit per pengguna (atau per IP bila tamu). Login & `track` lebih ketat: 10/menit.
 
 ## Konvensi

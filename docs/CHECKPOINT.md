@@ -7,10 +7,10 @@ Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.m
 
 | Gate | Hasil |
 |---|---|
-| Backend `php artisan test` | 116 passed, 388 assertions |
-| `pint --test` | PASS, 156 files |
+| Backend `php artisan test` | 121 passed, 407 assertions |
+| `pint --test` | PASS, 166 files |
 | `phpstan analyse` (Larastan L5) | 0 errors (baseline) |
-| Backend coverage (pcov) | 92.5% (gate min 90) |
+| Backend coverage (pcov) | 92.2% (gate min 90) |
 | Frontend `vitest run` | 51 passed (11 files) |
 | `tsc --noEmit` / `eslint src` | 0 error / 0 error |
 | `next build` | exit 0 (manifest/robots/sitemap/icon) |
@@ -19,11 +19,11 @@ Plan aktif menuju produksi: [`docs/superpowers/plans/2026-09-13-production-100.m
 | Visual regression (win32, opt-in) | baseline tersimpan |
 | `docker build` api & web prod | exit 0 (web serve HTTP 200 + CSP) |
 | Astro `astro check` / build | 0 error / 3 halaman |
-| Flutter `analyze` / `test` | 0 issue / 22 test |
+| Flutter `analyze` / `test` | 0 issue / 25 test |
 | Flutter `build apk --debug` | exit 0 (app-debug.apk) |
 | `docker compose -f infra/docker-compose.prod.yml config` | valid |
 
-Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS, apps/site Astro, password reset, factory 7 model, Larastan, Sentry, coverage gate, E2E Laravel nyata, k6, visual regression, **mobile Flutter M9a–M9c** (platform android/ios, DI/OOP, auth aman, fitur per peran, offline baca, Sentry, signing).
+Perubahan utama: housekeeping produksi, role gate `/settings`, error boundary, interceptor 401, rate limit, paritas mock↔Laravel, auth httpOnly cookie Sanctum SPA, refactor OOP, image prod api+web, deep health + index DB, security CI + Dependabot, artifact deploy VPS, apps/site Astro, password reset, factory 7 model, Larastan, Sentry, coverage gate, E2E Laravel nyata, k6, visual regression, idempotency key + device token/push, **mobile Flutter M9a–M9c** (platform, DI/OOP, fitur per peran, offline baca+tulis, Sentry, signing).
 
 
 ## Verifikasi baseline (2026-09-04)

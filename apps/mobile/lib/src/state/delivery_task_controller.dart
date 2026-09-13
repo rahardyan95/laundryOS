@@ -61,6 +61,10 @@ class DeliveryTaskController extends ChangeNotifier {
       final updated = await _repository.advance(task.id, status);
       _replace(updated);
       return true;
+    } on QueuedOfflineException catch (error) {
+      _error = error.message;
+      notifyListeners();
+      return false;
     } on ApiException catch (error) {
       _error = error.message;
       notifyListeners();

@@ -34,12 +34,12 @@ class CachingApiTransport implements ApiTransport {
   }
 
   @override
-  Future<ApiResponse> post(String path, {Object? body, String? token}) =>
-      _inner.post(path, body: body, token: token);
+  Future<ApiResponse> post(String path, {Object? body, String? token, String? idempotencyKey}) =>
+      _inner.post(path, body: body, token: token, idempotencyKey: idempotencyKey);
 
   @override
-  Future<ApiResponse> patch(String path, {Object? body, String? token}) =>
-      _inner.patch(path, body: body, token: token);
+  Future<ApiResponse> patch(String path, {Object? body, String? token, String? idempotencyKey}) =>
+      _inner.patch(path, body: body, token: token, idempotencyKey: idempotencyKey);
 
   @override
   Future<ApiResponse> postMultipart(
