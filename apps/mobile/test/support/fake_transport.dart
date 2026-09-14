@@ -1,4 +1,5 @@
 import "package:laundryos_mobile/src/api/api_transport.dart";
+import "package:laundryos_mobile/src/api/upload_file.dart";
 
 class FakeTransport implements ApiTransport {
   final List<ApiResponse> _queue = [];
@@ -48,7 +49,7 @@ class FakeTransport implements ApiTransport {
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields = const {},
-    Map<String, List<int>> files = const {},
+    Map<String, UploadFile> files = const {},
     String? token,
   }) async =>
       _next("POST", path, null);

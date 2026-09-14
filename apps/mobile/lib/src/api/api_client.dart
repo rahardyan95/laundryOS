@@ -5,6 +5,7 @@ import "../models/notification.dart";
 import "../models/order.dart";
 import "api_exception.dart";
 import "api_transport.dart";
+import "upload_file.dart";
 
 class ApiClient {
   ApiClient(this._transport);
@@ -23,9 +24,20 @@ class ApiClient {
     );
   }
 
+  /// Memetakan envelope koleksi (`{"data": [...]}`) menjadi daftar model bertipe.
+  /// Rantai `whereType(...).map(...)` harus dimulai dari nilai bertipe statis —
+  /// bila lewat `dynamic`, hasilnya `List<dynamic>` dan gagal type-check runtime.
+  List<T> _collection<T>(
+      ApiResponse response, T Function(Map<String, dynamic>) fromJson) {
+    final data = _ensure(response).asMap["data"];
+    if (data is! List) return const [];
+    return data.whereType<Map<String, dynamic>>().map(fromJson).toList();
+  }
+
   // --- Auth ---
 
-  Future<Map<String, dynamic>> login(String email, String password, String deviceName) async {
+  Future<Map<String, dynamic>> login(
+      String email, String password, String deviceName) async {
     final response = await _transport.post(
       "/auth/login",
       body: {"email": email, "password": password, "device_name": deviceName},
@@ -70,7 +82,10 @@ class ApiClient {
       body: {
         "outlet_id": int.parse(outletId),
         "customer_id": int.parse(customerId),
-        "items": items.map((item) => {"service_id": int.parse(item.serviceId), "qty": item.qty}).toList(),
+        "items": items
+            .map((item) =>
+                {"service_id": int.parse(item.serviceId), "qty": item.qty})
+            .toList(),
         "paid_amount": paidAmount,
         "payment_method": paidAmount > 0 ? paymentMethod : null,
         "note": note,
@@ -80,7 +95,8 @@ class ApiClient {
     return _orderFrom(_ensure(response).asMap);
   }
 
-  Future<Order> advanceOrderStatus(String token, String orderId, {String? note}) async {
+  Future<Order> advanceOrderStatus(String token, String orderId,
+      {String? note}) async {
     final response = await _transport.post(
       "/orders/$orderId/status",
       body: note == null || note.isEmpty ? null : {"note": note},
@@ -89,7 +105,8 @@ class ApiClient {
     return _orderFrom(_ensure(response).asMap);
   }
 
-  Future<Order> cancelOrder(String token, String orderId, {String? note}) async {
+  Future<Order> cancelOrder(String token, String orderId,
+      {String? note}) async {
     final response = await _transport.post(
       "/orders/$orderId/cancel",
       body: note == null || note.isEmpty ? null : {"note": note},
@@ -103,28 +120,25 @@ class ApiClient {
   Future<List<Customer>> listCustomers(String token, {String? query}) async {
     final response = await _transport.get(
       "/customers",
-      query: {"per_page": "100", if (query != null && query.isNotEmpty) "q": query},
+      query: {
+        "per_page": "100",
+        if (query != null && query.isNotEmpty) "q": query
+      },
       token: token,
     );
-    return _ensure(response)
-        .asMap["data"]
-        .whereType<Map<String, dynamic>>()
-        .map(Customer.fromJson)
-        .toList();
+    return _collection(response, Customer.fromJson);
   }
 
   Future<List<Service>> listServices(String token) async {
-    final response = await _transport.get("/services", query: {"per_page": "100"}, token: token);
-    return _ensure(response)
-        .asMap["data"]
-        .whereType<Map<String, dynamic>>()
-        .map(Service.fromJson)
-        .toList();
+    final response = await _transport.get("/services",
+        query: {"per_page": "100"}, token: token);
+    return _collection(response, Service.fromJson);
   }
 
   // --- Delivery tasks ---
 
-  Future<DeliveryTaskPage> listDeliveryTasks(String token, {int page = 1}) async {
+  Future<DeliveryTaskPage> listDeliveryTasks(String token,
+      {int page = 1}) async {
     final response = await _transport.get(
       "/delivery-tasks",
       query: {"page": "$page"},
@@ -154,7 +168,7 @@ class ApiClient {
   }) async {
     final response = await _transport.postMultipart(
       "/delivery-tasks/$taskId/proof",
-      files: {"proof": bytes},
+      files: {"proof": UploadFile(filename: filename, bytes: bytes)},
       token: token,
     );
     return _taskFrom(_ensure(response).asMap);
@@ -168,15 +182,12 @@ class ApiClient {
       query: {"per_page": "50"},
       token: token,
     );
-    return _ensure(response)
-        .asMap["data"]
-        .whereType<Map<String, dynamic>>()
-        .map(AppNotification.fromJson)
-        .toList();
+    return _collection(response, AppNotification.fromJson);
   }
 
   Future<int> unreadCount(String token) async {
-    final response = await _transport.get("/notifications/unread-count", token: token);
+    final response =
+        await _transport.get("/notifications/unread-count", token: token);
     final data = _ensure(response).asMap["data"];
     return data is Map ? (data["unread"] as num?)?.toInt() ?? 0 : 0;
   }
@@ -187,10 +198,12 @@ class ApiClient {
 
   // --- Dashboard ---
 
-  Future<DashboardSummary> dashboardSummary(String token, {String? outletId}) async {
+  Future<DashboardSummary> dashboardSummary(String token,
+      {String? outletId}) async {
     final response = await _transport.get(
       "/dashboard/summary",
-      query: outletId == null || outletId.isEmpty ? null : {"outlet_id": outletId},
+      query:
+          outletId == null || outletId.isEmpty ? null : {"outlet_id": outletId},
       token: token,
     );
     final data = _ensure(response).asMap["data"];

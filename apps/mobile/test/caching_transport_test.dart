@@ -3,6 +3,7 @@ import "package:laundryos_mobile/src/api/api_exception.dart";
 import "package:laundryos_mobile/src/api/api_transport.dart";
 import "package:laundryos_mobile/src/api/caching_api_transport.dart";
 import "package:laundryos_mobile/src/api/offline_cache.dart";
+import "package:laundryos_mobile/src/api/upload_file.dart";
 
 import "support/fake_transport.dart";
 
@@ -24,7 +25,7 @@ class ThrowingTransport implements ApiTransport {
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields = const {},
-    Map<String, List<int>> files = const {},
+    Map<String, UploadFile> files = const {},
     String? token,
   }) async =>
       throw NetworkException();

@@ -211,12 +211,6 @@ parameters:
 			path: app/Domains/Identity/Http/Resources/UserResource.php
 
 		-
-			message: '#^Attribute class Illuminate\\Database\\Eloquent\\Attributes\\Hidden does not have the property target\.$#'
-			identifier: attribute.target
-			count: 1
-			path: app/Domains/Identity/Models/User.php
-
-		-
 			message: '#^Cannot call method next\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1

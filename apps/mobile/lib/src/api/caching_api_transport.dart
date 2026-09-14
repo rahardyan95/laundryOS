@@ -1,6 +1,7 @@
 import "api_exception.dart";
 import "api_transport.dart";
 import "offline_cache.dart";
+import "upload_file.dart";
 
 /// Dekorator transport: menyimpan respons GET sukses dan mengembalikannya bila
 /// jaringan gagal (mode offline baca-saja). Mutasi tetap diteruskan apa adanya.
@@ -45,7 +46,7 @@ class CachingApiTransport implements ApiTransport {
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields = const {},
-    Map<String, List<int>> files = const {},
+    Map<String, UploadFile> files = const {},
     String? token,
   }) =>
       _inner.postMultipart(path, fields: fields, files: files, token: token);

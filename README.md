@@ -19,9 +19,12 @@ SaaS operasional UMKM — dimulai dari laundry kiloan/satuan. Digitalisasi order
 
 ```bash
 cd infra && docker compose up -d
+docker compose run --rm -T api composer install --no-interaction   # hanya klon bersih
 docker compose run --rm -T api php artisan migrate:fresh --seed
 cd .. && pnpm install && pnpm --filter web dev
 ```
+
+`apps/api/.env` + `APP_KEY` dibuat otomatis saat container `api` pertama jalan (klon bersih tidak butuh langkah manual).
 
 Web: http://localhost:3000 · API: http://localhost:8000/api/v1/health · Demo: `owner@laundryos.test` / `password`
 

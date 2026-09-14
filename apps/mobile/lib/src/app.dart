@@ -5,6 +5,7 @@ import "app_dependencies.dart";
 import "state/auth_controller.dart";
 import "screens/home_shell.dart";
 import "screens/login_screen.dart";
+import "theme/app_theme.dart";
 
 class LaundryOsApp extends StatefulWidget {
   const LaundryOsApp({super.key, required this.dependencies});
@@ -39,10 +40,12 @@ class _LaundryOsAppState extends State<LaundryOsApp> {
       child: MaterialApp(
         title: "LaundryOS",
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F5C4A)),
-        ),
+        // Dua mode dari satu palet; mode mengikuti pengaturan sistem karena
+        // pengguna Android sudah punya kebiasaan itu dan satu sakelar lagi
+        // hanya menambah langkah.
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.system,
         home: const AuthGate(),
       ),
     );
@@ -54,10 +57,12 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = context.select<AuthController, AuthStatus>((auth) => auth.status);
+    final status =
+        context.select<AuthController, AuthStatus>((auth) => auth.status);
 
     return switch (status) {
-      AuthStatus.unknown => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      AuthStatus.unknown =>
+        const Scaffold(body: Center(child: CircularProgressIndicator())),
       AuthStatus.authenticated => const HomeShell(),
       AuthStatus.unauthenticated => const LoginScreen(),
     };

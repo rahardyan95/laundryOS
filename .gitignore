@@ -37,7 +37,7 @@ coverage/
 infra/backups/
 *.sql.gz
 
-# Vendor skill/tool repos (besar, pihak ketiga)
+# Vendor skill/tool repos (besar, pihak ketiga — 585 MB, tidak dipakai runtime)
 skill/
 
 # Config agen lokal

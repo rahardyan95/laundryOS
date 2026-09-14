@@ -25,3 +25,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    # Plus Jakarta Sans (lisensi OFL 1.1, lihat assets/fonts/OFL.txt) — sama
+    # dengan web (DESIGN.md §2). Satu variable font: berat dipilih lewat
+    # `fontWeight`, dipetakan Flutter ke sumbu `wght`.
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Variable.ttf

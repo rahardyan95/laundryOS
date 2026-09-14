@@ -15,12 +15,12 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[UsePolicy(UserPolicy::class)]
+#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    #[Hidden(['password', 'remember_token'])]
     protected $fillable = ['name', 'email', 'password', 'role', 'tenant_id', 'outlet_id'];
 
     protected function casts(): array
