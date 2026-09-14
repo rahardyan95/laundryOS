@@ -11,7 +11,8 @@ import "support/fake_transport.dart";
 import "support/in_memory_session_store.dart";
 
 void main() {
-  testWidgets("LoginScreen menampilkan email, kata sandi, dan tombol masuk", (tester) async {
+  testWidgets("LoginScreen menampilkan email, kata sandi, dan tombol masuk",
+      (tester) async {
     final deps = AppDependencies(
       transport: FakeTransport(),
       store: InMemorySessionStore(),
@@ -20,8 +21,10 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<AuthController>.value(value: deps.authController),
-          ChangeNotifierProvider<OrderController>.value(value: deps.orderController),
+          ChangeNotifierProvider<AuthController>.value(
+              value: deps.authController),
+          ChangeNotifierProvider<OrderController>.value(
+              value: deps.orderController),
         ],
         child: const MaterialApp(home: LoginScreen()),
       ),

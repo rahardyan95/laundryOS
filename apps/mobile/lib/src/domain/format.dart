@@ -28,14 +28,17 @@ class Format {
 
   // Dibuat lazy: konstruksi `DateFormat` ber-locale melempar bila simbol belum
   // dimuat, jadi objek ini hanya disentuh setelah [initialize] selesai.
-  static final DateFormat _dateTimeIndonesian = DateFormat("d MMM yyyy, HH:mm", "id_ID");
+  static final DateFormat _dateTimeIndonesian =
+      DateFormat("d MMM yyyy, HH:mm", "id_ID");
   static final DateFormat _dateIndonesian = DateFormat("d MMM yyyy", "id_ID");
 
   static final DateFormat _dateTimeFallback = DateFormat("d MMM yyyy, HH:mm");
   static final DateFormat _dateFallback = DateFormat("d MMM yyyy");
 
-  static DateFormat get _dateTime => _dateSymbolsReady ? _dateTimeIndonesian : _dateTimeFallback;
-  static DateFormat get _date => _dateSymbolsReady ? _dateIndonesian : _dateFallback;
+  static DateFormat get _dateTime =>
+      _dateSymbolsReady ? _dateTimeIndonesian : _dateTimeFallback;
+  static DateFormat get _date =>
+      _dateSymbolsReady ? _dateIndonesian : _dateFallback;
 
   static String rupiah(num value) => _rupiah.format(value);
 

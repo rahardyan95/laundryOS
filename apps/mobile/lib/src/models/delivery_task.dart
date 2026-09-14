@@ -60,11 +60,15 @@ class DeliveryTask {
     return DeliveryTask(
       id: json["id"].toString(),
       type: DeliveryTaskType.fromWire(json["type"] as String? ?? "pickup"),
-      status: DeliveryTaskStatus.fromWire(json["status"] as String? ?? "pending"),
+      status:
+          DeliveryTaskStatus.fromWire(json["status"] as String? ?? "pending"),
       scheduledAt: json["scheduled_at"] as String?,
       address: json["address"] as String? ?? "-",
-      orderTicket: order is Map<String, dynamic> ? order["ticket"] as String? ?? "-" : "-",
-      driverName: driver is Map<String, dynamic> ? driver["name"] as String? : null,
+      orderTicket: order is Map<String, dynamic>
+          ? order["ticket"] as String? ?? "-"
+          : "-",
+      driverName:
+          driver is Map<String, dynamic> ? driver["name"] as String? : null,
       proofUrl: json["proof_url"] as String?,
     );
   }
@@ -89,7 +93,8 @@ class DeliveryTaskPage {
         .map(DeliveryTask.fromJson)
         .toList();
     final meta = body["meta"];
-    final current = meta is Map ? (meta["current_page"] as num?)?.toInt() ?? 1 : 1;
+    final current =
+        meta is Map ? (meta["current_page"] as num?)?.toInt() ?? 1 : 1;
     final last = meta is Map ? (meta["last_page"] as num?)?.toInt() ?? 1 : 1;
     return DeliveryTaskPage(tasks: data, currentPage: current, lastPage: last);
   }

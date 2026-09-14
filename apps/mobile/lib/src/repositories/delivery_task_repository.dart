@@ -21,12 +21,15 @@ class DeliveryTaskRepository {
     required List<int> bytes,
     required String filename,
   }) async {
-    return _api.uploadDeliveryProof(await _token(), taskId, bytes: bytes, filename: filename);
+    return _api.uploadDeliveryProof(await _token(), taskId,
+        bytes: bytes, filename: filename);
   }
 
   Future<String> _token() async {
     final token = await _tokenProvider();
-    if (token == null) throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    if (token == null) {
+      throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    }
     return token;
   }
 }

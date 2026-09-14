@@ -18,7 +18,9 @@ class CatalogRepository {
 
   Future<String> _token() async {
     final token = await _tokenProvider();
-    if (token == null) throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    if (token == null) {
+      throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    }
     return token;
   }
 }

@@ -36,7 +36,8 @@ void main() {
 
     test("memakai nama bulan locale Indonesia", () {
       expect(Format.dateTime("2026-09-15T10:00:00Z"), contains("Sep"));
-      expect(Format.date("2026-09-15T10:00:00Z"), matches(RegExp(r"^\d{1,2} \w+ \d{4}$")));
+      expect(Format.date("2026-09-15T10:00:00Z"),
+          matches(RegExp(r"^\d{1,2} \w+ \d{4}$")));
     });
   });
 }

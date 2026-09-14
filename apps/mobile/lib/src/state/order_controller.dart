@@ -61,9 +61,11 @@ class OrderController extends ChangeNotifier {
     }
   }
 
-  Future<bool> advance(Order order, {String? note}) => _mutate(() => _repository.advance(order.id, note: note));
+  Future<bool> advance(Order order, {String? note}) =>
+      _mutate(() => _repository.advance(order.id, note: note));
 
-  Future<bool> cancel(Order order, {String? note}) => _mutate(() => _repository.cancel(order.id, note: note));
+  Future<bool> cancel(Order order, {String? note}) =>
+      _mutate(() => _repository.cancel(order.id, note: note));
 
   Future<Order?> create({
     required String outletId,

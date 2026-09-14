@@ -24,7 +24,13 @@ void main() {
   test("OrderPage membaca envelope paginasi", () {
     final page = OrderPage.fromEnvelope({
       "data": [
-        {"id": 1, "ticket": "A-1", "status": "received", "total": 0, "paid_amount": 0},
+        {
+          "id": 1,
+          "ticket": "A-1",
+          "status": "received",
+          "total": 0,
+          "paid_amount": 0
+        },
       ],
       "meta": {"current_page": 1, "last_page": 3},
     });
@@ -37,7 +43,13 @@ void main() {
 
   test("SessionPayload membaca user, tenant, dan outlets", () {
     final session = SessionPayload.fromMeJson({
-      "user": {"id": 2, "name": "Ayu", "email": "a@x.test", "role": "owner", "outlet_id": 3},
+      "user": {
+        "id": 2,
+        "name": "Ayu",
+        "email": "a@x.test",
+        "role": "owner",
+        "outlet_id": 3
+      },
       "tenant": {"id": 9},
       "outlets": [
         {"id": 3, "name": "SBY", "code": "SBY"},

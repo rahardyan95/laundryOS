@@ -72,9 +72,11 @@ class DeliveryTaskController extends ChangeNotifier {
     }
   }
 
-  Future<bool> uploadProof(DeliveryTask task, {required List<int> bytes, required String filename}) async {
+  Future<bool> uploadProof(DeliveryTask task,
+      {required List<int> bytes, required String filename}) async {
     try {
-      final updated = await _repository.uploadProof(task.id, bytes: bytes, filename: filename);
+      final updated = await _repository.uploadProof(task.id,
+          bytes: bytes, filename: filename);
       _replace(updated);
       return true;
     } on ApiException catch (error) {

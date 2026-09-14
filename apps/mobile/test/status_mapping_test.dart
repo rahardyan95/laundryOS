@@ -37,9 +37,11 @@ void main() {
     test("tugas selesai positif, dibatalkan negatif, sisanya berjenjang", () {
       expect(TaskMachine.kind(DeliveryTaskStatus.pending), StatusKind.neutral);
       expect(TaskMachine.kind(DeliveryTaskStatus.assigned), StatusKind.info);
-      expect(TaskMachine.kind(DeliveryTaskStatus.inProgress), StatusKind.warning);
+      expect(
+          TaskMachine.kind(DeliveryTaskStatus.inProgress), StatusKind.warning);
       expect(TaskMachine.kind(DeliveryTaskStatus.done), StatusKind.positive);
-      expect(TaskMachine.kind(DeliveryTaskStatus.cancelled), StatusKind.negative);
+      expect(
+          TaskMachine.kind(DeliveryTaskStatus.cancelled), StatusKind.negative);
     });
   });
 }

@@ -4,9 +4,12 @@ import "package:laundryos_mobile/src/models/delivery_task.dart";
 
 void main() {
   test("transisi task mengikuti alur", () {
-    expect(TaskMachine.next(DeliveryTaskStatus.pending), DeliveryTaskStatus.assigned);
-    expect(TaskMachine.next(DeliveryTaskStatus.assigned), DeliveryTaskStatus.inProgress);
-    expect(TaskMachine.next(DeliveryTaskStatus.inProgress), DeliveryTaskStatus.done);
+    expect(TaskMachine.next(DeliveryTaskStatus.pending),
+        DeliveryTaskStatus.assigned);
+    expect(TaskMachine.next(DeliveryTaskStatus.assigned),
+        DeliveryTaskStatus.inProgress);
+    expect(TaskMachine.next(DeliveryTaskStatus.inProgress),
+        DeliveryTaskStatus.done);
     expect(TaskMachine.next(DeliveryTaskStatus.done), isNull);
     expect(TaskMachine.next(DeliveryTaskStatus.cancelled), isNull);
   });

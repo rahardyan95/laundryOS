@@ -7,10 +7,12 @@ import "package:laundryos_mobile/src/api/offline_api_transport.dart";
 import "support/fake_transport.dart";
 
 void main() {
-  test("mutasi saat offline masuk antrean dan melempar QueuedOfflineException", () async {
+  test("mutasi saat offline masuk antrean dan melempar QueuedOfflineException",
+      () async {
     final inner = FakeTransport()..enqueueError(NetworkException());
     final queue = InMemoryMutationQueue();
-    final transport = OfflineApiTransport(inner, queue, () async => "tok");
+    final transport =
+        OfflineApiTransport(inner, queue, () async => "tok", () async => "1");
 
     await expectLater(
       transport.post("/orders", body: {"a": 1}),
@@ -23,12 +25,15 @@ void main() {
     expect(pending.single.idempotencyKey, isNotEmpty);
   });
 
-  test("flush mengirim ulang dengan key sama lalu mengosongkan antrean", () async {
+  test("flush mengirim ulang dengan key sama lalu mengosongkan antrean",
+      () async {
     final inner = FakeTransport()..enqueueError(NetworkException());
     final queue = InMemoryMutationQueue();
-    final transport = OfflineApiTransport(inner, queue, () async => "tok");
+    final transport =
+        OfflineApiTransport(inner, queue, () async => "tok", () async => "1");
 
-    await transport.post("/orders", body: {"a": 1}).catchError((_) => const ApiResponse(0, null));
+    await transport.post("/orders",
+        body: {"a": 1}).catchError((_) => const ApiResponse(0, null));
     final key = (await queue.all()).single.idempotencyKey;
 
     inner.enqueue(const ApiResponse(201, {"data": {}}));
@@ -42,9 +47,11 @@ void main() {
   test("mutasi ditolak server dibuang dari antrean", () async {
     final inner = FakeTransport()..enqueueError(NetworkException());
     final queue = InMemoryMutationQueue();
-    final transport = OfflineApiTransport(inner, queue, () async => "tok");
+    final transport =
+        OfflineApiTransport(inner, queue, () async => "tok", () async => "1");
 
-    await transport.post("/orders", body: {"a": 1}).catchError((_) => const ApiResponse(0, null));
+    await transport.post("/orders",
+        body: {"a": 1}).catchError((_) => const ApiResponse(0, null));
     inner.enqueue(const ApiResponse(422, {"message": "Tidak valid"}));
 
     await transport.flush();

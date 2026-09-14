@@ -10,7 +10,8 @@ Widget _wrap(Widget child) => MaterialApp(
     );
 
 void main() {
-  testWidgets("saat memuat dan belum ada isi, tampilkan indikator", (tester) async {
+  testWidgets("saat memuat dan belum ada isi, tampilkan indikator",
+      (tester) async {
     await tester.pumpWidget(
       _wrap(
         const AsyncSection(
@@ -27,7 +28,8 @@ void main() {
     expect(find.text("isi"), findsNothing);
   });
 
-  testWidgets("saat selesai tanpa data, tampilkan keadaan kosong", (tester) async {
+  testWidgets("saat selesai tanpa data, tampilkan keadaan kosong",
+      (tester) async {
     await tester.pumpWidget(
       _wrap(
         const AsyncSection(
@@ -82,7 +84,8 @@ void main() {
     expect(retried, isTrue);
   });
 
-  testWidgets("memuat halaman berikutnya memakai indikator ringkas", (tester) async {
+  testWidgets("memuat halaman berikutnya memakai indikator ringkas",
+      (tester) async {
     await tester.pumpWidget(
       _wrap(
         const AsyncSection(

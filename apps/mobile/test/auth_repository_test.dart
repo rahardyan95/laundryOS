@@ -10,9 +10,18 @@ import "support/in_memory_session_store.dart";
 void main() {
   test("login menyimpan token dan mengembalikan sesi", () async {
     final transport = FakeTransport()
-      ..enqueue(const ApiResponse(200, {"token": "tok-1", "user": {"id": 1}}))
       ..enqueue(const ApiResponse(200, {
-        "user": {"id": 1, "name": "Budi", "email": "b@x.test", "role": "owner", "outlet_id": 2},
+        "token": "tok-1",
+        "user": {"id": 1}
+      }))
+      ..enqueue(const ApiResponse(200, {
+        "user": {
+          "id": 1,
+          "name": "Budi",
+          "email": "b@x.test",
+          "role": "owner",
+          "outlet_id": 2
+        },
         "tenant": {"id": 9},
         "outlets": [],
       }));
@@ -42,7 +51,13 @@ void main() {
   test("restore mengembalikan sesi saat token valid", () async {
     final transport = FakeTransport()
       ..enqueue(const ApiResponse(200, {
-        "user": {"id": 3, "name": "Ayu", "email": "a@x.test", "role": "cashier", "outlet_id": ""},
+        "user": {
+          "id": 3,
+          "name": "Ayu",
+          "email": "a@x.test",
+          "role": "cashier",
+          "outlet_id": ""
+        },
         "tenant": {"id": 1},
         "outlets": [],
       }));

@@ -45,7 +45,9 @@ class OrderRepository {
 
   Future<String> _requireToken() async {
     final token = await _tokenProvider();
-    if (token == null) throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    if (token == null) {
+      throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    }
     return token;
   }
 }
