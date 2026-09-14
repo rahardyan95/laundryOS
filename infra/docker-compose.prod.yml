@@ -34,7 +34,9 @@ services:
     build:
       context: ../apps/api
       dockerfile: Dockerfile.prod
-    image: laundryos-api:prod
+    # Tag bisa dipatok lewat .env.prod supaya rollback cukup ganti tag
+    # (lihat DEPLOY.md §7): API_IMAGE=laundryos-api:2026-09-14.
+    image: ${API_IMAGE:-laundryos-api:prod}
     restart: unless-stopped
     env_file: [.env.prod]
     environment:
@@ -57,7 +59,9 @@ services:
     networks: [backend]
 
   worker:
-    image: laundryos-api:prod
+    # Worker/scheduler selalu memakai tag API yang sama, supaya rollback satu
+    # image saja.
+    image: ${API_IMAGE:-laundryos-api:prod}
     restart: unless-stopped
     env_file: [.env.prod]
     environment:
@@ -71,7 +75,7 @@ services:
     networks: [backend]
 
   scheduler:
-    image: laundryos-api:prod
+    image: ${API_IMAGE:-laundryos-api:prod}
     restart: unless-stopped
     env_file: [.env.prod]
     environment:
@@ -91,8 +95,10 @@ services:
       args:
         NEXT_PUBLIC_API_MODE: laravel
         NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:?set PUBLIC_API_URL di .env.prod}
-        NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?set PUBLIC_SITE_URL di .env.prod}
-    image: laundryos-web:prod
+        # Aplikasi punya host sendiri (PUBLIC_APP_URL): sitemap/robots Next
+        # memakai nilai ini, sedangkan situs pemasaran memakai PUBLIC_SITE_URL.
+        NEXT_PUBLIC_SITE_URL: ${PUBLIC_APP_URL:?set PUBLIC_APP_URL di .env.prod}
+    image: ${WEB_IMAGE:-laundryos-web:prod}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -100,6 +106,25 @@ services:
     depends_on:
       api:
         condition: service_started
+    networks: [backend]
+
+  site:
+    build:
+      context: ../apps/site
+      dockerfile: Dockerfile.prod
+      # URL dikompilasi ke dalam HTML statis (canonical, sitemap, CTA), jadi
+      # build ditolak bila salah satu kosong — tidak ada nilai localhost yang
+      # lolos ke produksi.
+      args:
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?set PUBLIC_SITE_URL di .env.prod}
+        PUBLIC_APP_URL: ${PUBLIC_APP_URL:?set PUBLIC_APP_URL di .env.prod}
+    image: ${SITE_IMAGE:-laundryos-site:prod}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks: [backend]
 
   nginx:
@@ -110,21 +135,37 @@ services:
       - "443:443"
     volumes:
       - ./nginx/laundryos.conf:/etc/nginx/conf.d/default.conf:ro
+      # Blok 443 (TLS): *.conf di sini dimuat via include wildcard. Direktori
+      # boleh kosong sebelum sertifikat terbit.
+      - ./nginx/tls:/etc/nginx/conf.d/tls:ro
       - ./nginx/certs:/etc/nginx/certs:ro
       - certbot-www:/var/www/certbot:ro
     depends_on:
       - api
       - web
+      - site
     networks: [backend]
 
   certbot:
-    image: certbot/certbot:latest
+    build:
+      context: ./certbot
+    image: ${CERTBOT_IMAGE:-laundryos-certbot:prod}
     profiles: [tls]
     volumes:
       - ./nginx/certs:/etc/letsencrypt
       - certbot-www:/var/www/certbot
+      # Hook deploy me-reload container nginx lewat docker CLI. Socket ini
+      # memberi akses tingkat host ke container certbot — kalau tidak mau,
+      # hapus mount + --deploy-hook dan reload nginx dari cron di host
+      # (DEPLOY.md §5 catatan).
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Nama container nginx (turunan `name: laundryos` + service + index).
+      NGINX_CONTAINER: ${NGINX_CONTAINER:-laundryos-nginx-1}
     entrypoint: sh
-    command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h & wait $${!}; done"
+    # Perpanjangan otomatis dua kali sehari + reload nginx saat sertifikat
+    # benar-benar diperpanjang (--deploy-hook).
+    command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --deploy-hook /usr/local/bin/reload-nginx.sh; sleep 12h & wait $${!}; done"
 
 networks:
   backend:

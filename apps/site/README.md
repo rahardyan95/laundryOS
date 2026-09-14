@@ -15,16 +15,29 @@ pnpm --filter site exec astro check
 
 ## Konfigurasi
 
-- `PUBLIC_SITE_URL` — domain publik (untuk canonical/sitemap).
-- `PUBLIC_APP_URL` — URL aplikasi (default `http://localhost:3000`) untuk CTA "Masuk".
+- `PUBLIC_SITE_URL` — domain publik situs; dipakai untuk canonical, `sitemap.xml`
+  (`sitemap-index.xml` + `sitemap-0.xml` dari `@astrojs/sitemap`), dan `robots.txt`
+  (digenerate dari endpoint `src/pages/robots.txt.ts`, bukan berkas statis).
+- `PUBLIC_APP_URL` — URL aplikasi (dashboard) untuk CTA "Masuk"/"Lacak cucian"
+  (`src/config.ts`). Di produksi wajib diisi; `Dockerfile.prod` menolak build tanpa
+  `PUBLIC_SITE_URL` + `PUBLIC_APP_URL` sehingga HTML produksi tidak memuat tautan localhost.
+
+Tanpa env (dev lokal / CI), `site` jatuh ke `http://localhost:4321`.
 
 ## Halaman
 
 - `/` — landing: hero, fitur, alur, peran, FAQ, CTA.
 - `/harga` — paket Starter/Growth/Multi-Outlet.
-- `/404` — halaman tidak ditemukan.
+- `/404` — halaman tidak ditemukan (dipakai juga sebagai `error_page 404` di `nginx.conf`).
+- `/robots.txt`, `/sitemap-index.xml` — hasil generate saat build.
 
 ## Deploy
 
-Hasil build statis (`dist/`) dapat dilayani Nginx di VPS yang sama (root `/var/www/site`)
-atau di-hosting statis (Netlify/Cloudflare Pages). Set konfigurasi `PUBLIC_*` saat build.
+- **VPS (cara resmi):** service `site` di `infra/docker-compose.prod.yml` membangun
+  `apps/site/Dockerfile.prod` (node → build statis → `nginx:1.27-alpine`) dan dilayani edge
+  nginx pada host publik (`server_name` di `infra/nginx/laundryos.conf`). Lihat `infra/DEPLOY.md` §3/§5.
+- Hosting statis (Netlify/Cloudflare Pages): arahkan ke `apps/site/dist`, set `PUBLIC_*` saat build.
+
+`Dockerfile.prod` memakai lockfile mandiri di folder ini (`pnpm-lock.yaml` + `pnpm-workspace.yaml`,
+sama pola dengan `apps/web`) supaya konteks build berdiri sendiri; setelah menambah dependensi di
+root, jalankan `pnpm install --lockfile-only` dari `apps/site` agar lockfile itu ikut diperbarui.

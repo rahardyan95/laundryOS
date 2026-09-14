@@ -1,0 +1,6 @@
+# Berkas ini membuat `pnpm install` di dalam apps/site berdiri sendiri
+# (dipakai Dockerfile.prod), sama seperti apps/web. Selama pengembangan dari
+# root, workspace root (`packages: apps/*`) yang berlaku.
+allowBuilds:
+  esbuild: true
+  sharp: true

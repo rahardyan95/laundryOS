@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-
-const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+import { appUrl } from "../config";
 
 const plans = [
   {

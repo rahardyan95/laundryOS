@@ -1,0 +1,91 @@
+# Blok HTTPS produksi — CONTOH, tidak dimuat otomatis.
+#
+# Cara pakai (rinci: infra/DEPLOY.md §5):
+#   1. Ganti setiap `laundryos.example` di berkas ini dengan domain asli, dan
+#      `app.laundryos.example` dengan host aplikasi (mis. app.<domain>).
+#   2. Simpan sebagai `nginx/tls/laundryos-ssl.conf` (direktori ini di-mount ke
+#      /etc/nginx/conf.d/tls dan dimuat lewat include wildcard di
+#      nginx/laundryos.conf). Berkas berakhiran `.example` tidak dimuat nginx,
+#      jadi direktori ini boleh kosong.
+#   3. `docker compose ... exec nginx nginx -t && ... exec nginx nginx -s reload`.
+#
+# Path sertifikat mengikuti mount certbot: ./nginx/certs -> /etc/letsencrypt,
+# jadi direktori live Let's Encrypt terlihat sebagai /etc/nginx/certs/live/<domain>/.
+
+# --- Aplikasi (dashboard/POS + API) ---
+server {
+    listen 443 ssl default_server;
+    http2 on;
+    server_name app.laundryos.example;
+
+    ssl_certificate     /etc/nginx/certs/live/laundryos.example/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/live/laundryos.example/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:LaundryOS_TLS:10m;
+    ssl_session_timeout 1h;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    client_max_body_size 8M;
+
+    # --- API (Laravel via PHP-FPM) ---
+    location ~ ^/(api|sanctum|up)(/|$) {
+        include fastcgi_params;
+        # Sama seperti blok port 80: header kiriman klien dibuang supaya IP
+        # tidak bisa dipalsukan untuk melewati rate limit.
+        fastcgi_param HTTP_X_FORWARDED_FOR $remote_addr;
+        fastcgi_param HTTP_X_REAL_IP $remote_addr;
+        fastcgi_pass api:9000;
+        fastcgi_param SCRIPT_FILENAME /var/www/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/public;
+        fastcgi_param REQUEST_URI $request_uri;
+        fastcgi_read_timeout 60s;
+    }
+
+    # --- Web (Next.js standalone) ---
+    location / {
+        proxy_pass http://web:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 60s;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+
+# --- Situs pemasaran (apps/site) ---
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name laundryos.example www.laundryos.example;
+
+    ssl_certificate     /etc/nginx/certs/live/laundryos.example/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/live/laundryos.example/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_timeout 1h;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    client_max_body_size 8M;
+
+    location / {
+        proxy_pass http://site:80;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 30s;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
