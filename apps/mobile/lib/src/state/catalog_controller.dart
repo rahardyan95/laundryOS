@@ -23,9 +23,12 @@ class CatalogController extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final results = await Future.wait([_repository.customers(), _repository.services()]);
+      final results =
+          await Future.wait([_repository.customers(), _repository.services()]);
       _customers = results[0] as List<Customer>;
-      _services = (results[1] as List<Service>).where((service) => service.active).toList();
+      _services = (results[1] as List<Service>)
+          .where((service) => service.active)
+          .toList();
     } catch (_) {
       _error = "Gagal memuat pelanggan dan layanan.";
     } finally {

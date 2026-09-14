@@ -15,7 +15,8 @@ class DashboardSummary {
   final List<WorkloadItem> workload;
   final List<ReadyWaitingItem> readyWaiting;
 
-  factory DashboardSummary.fromJson(Map<String, dynamic> json) => DashboardSummary(
+  factory DashboardSummary.fromJson(Map<String, dynamic> json) =>
+      DashboardSummary(
         ordersToday: (json["orders_today"] as num?)?.toInt() ?? 0,
         salesToday: (json["sales_today"] as num?)?.toInt() ?? 0,
         outstanding: (json["outstanding"] as num?)?.toInt() ?? 0,
@@ -54,7 +55,8 @@ class ReadyWaitingItem {
   final String customerName;
   final int hoursWaiting;
 
-  factory ReadyWaitingItem.fromJson(Map<String, dynamic> json) => ReadyWaitingItem(
+  factory ReadyWaitingItem.fromJson(Map<String, dynamic> json) =>
+      ReadyWaitingItem(
         ticket: json["ticket"] as String? ?? "-",
         customerName: json["customer_name"] as String? ?? "-",
         hoursWaiting: (json["hours_waiting"] as num?)?.toInt() ?? 0,

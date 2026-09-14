@@ -15,7 +15,8 @@ class AppNotification {
 
   bool get unread => readAt == null;
 
-  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
+  factory AppNotification.fromJson(Map<String, dynamic> json) =>
+      AppNotification(
         id: json["id"].toString(),
         title: json["title"] as String? ?? "Notifikasi",
         body: json["body"] as String? ?? "",

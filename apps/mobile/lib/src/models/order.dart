@@ -41,7 +41,9 @@ class Order {
       ticket: json["ticket"] as String? ?? "-",
       status: OrderStatus.fromWire(json["status"] as String? ?? "received"),
       customerName: (json["customer_name"] as String?) ??
-          (customer is Map<String, dynamic> ? customer["name"] as String? : null) ??
+          (customer is Map<String, dynamic>
+              ? customer["name"] as String?
+              : null) ??
           "-",
       total: (json["total"] as num?)?.toInt() ?? 0,
       paidAmount: (json["paid_amount"] as num?)?.toInt() ?? 0,
@@ -51,7 +53,10 @@ class Order {
 }
 
 class OrderPage {
-  const OrderPage({required this.orders, required this.currentPage, required this.lastPage});
+  const OrderPage(
+      {required this.orders,
+      required this.currentPage,
+      required this.lastPage});
 
   final List<Order> orders;
   final int currentPage;
@@ -65,7 +70,8 @@ class OrderPage {
         .map(Order.fromJson)
         .toList();
     final meta = body["meta"];
-    final current = meta is Map ? (meta["current_page"] as num?)?.toInt() ?? 1 : 1;
+    final current =
+        meta is Map ? (meta["current_page"] as num?)?.toInt() ?? 1 : 1;
     final last = meta is Map ? (meta["last_page"] as num?)?.toInt() ?? 1 : 1;
     return OrderPage(orders: data, currentPage: current, lastPage: last);
   }

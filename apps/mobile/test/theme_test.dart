@@ -9,11 +9,14 @@ import "package:laundryos_mobile/src/theme/app_theme.dart";
 import "package:laundryos_mobile/src/widgets/status_chip.dart";
 
 /// Kontras WCAG 2.1: (L1 + 0.05) / (L2 + 0.05) dengan luminansi relatif.
-double _channel(double value) =>
-    value <= 0.03928 ? value / 12.92 : math.pow((value + 0.055) / 1.055, 2.4).toDouble();
+double _channel(double value) => value <= 0.03928
+    ? value / 12.92
+    : math.pow((value + 0.055) / 1.055, 2.4).toDouble();
 
 double _luminance(Color color) =>
-    0.2126 * _channel(color.r) + 0.7152 * _channel(color.g) + 0.0722 * _channel(color.b);
+    0.2126 * _channel(color.r) +
+    0.7152 * _channel(color.g) +
+    0.0722 * _channel(color.b);
 
 double contrastRatio(Color a, Color b) {
   final la = _luminance(a);
@@ -54,7 +57,10 @@ void main() {
             scheme.primaryContainer,
           ),
           "onError/error": (scheme.onError, scheme.error),
-          "onErrorContainer/errorContainer": (scheme.onErrorContainer, scheme.errorContainer),
+          "onErrorContainer/errorContainer": (
+            scheme.onErrorContainer,
+            scheme.errorContainer
+          ),
         };
         for (final pair in pairs.entries) {
           expect(
@@ -82,7 +88,8 @@ void main() {
       final theme = AppTheme.light();
       expect(theme.textTheme.bodyLarge?.fontFamily, "PlusJakartaSans");
       expect(theme.textTheme.displaySmall?.fontFamily, "PlusJakartaSans");
-      expect(theme.textTheme.displaySmall?.fontFeatures, contains(const FontFeature.tabularFigures()));
+      expect(theme.textTheme.displaySmall?.fontFeatures,
+          contains(const FontFeature.tabularFigures()));
     });
 
     test("sasaran sentuh tombol minimal 48dp", () {
@@ -93,7 +100,8 @@ void main() {
   });
 
   group("StatusChip", () {
-    testWidgets("memakai warna tone dari tema, bukan warna bawaan", (tester) async {
+    testWidgets("memakai warna tone dari tema, bukan warna bawaan",
+        (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.light(),
@@ -115,7 +123,10 @@ void main() {
         MaterialApp(
           theme: AppTheme.light(),
           home: const Scaffold(
-            body: StatusChip(label: "Belum Bayar", kind: StatusKind.negative, outlined: true),
+            body: StatusChip(
+                label: "Belum Bayar",
+                kind: StatusKind.negative,
+                outlined: true),
           ),
         ),
       );

@@ -9,7 +9,10 @@ import "support/fake_transport.dart";
 void main() {
   test("login mengembalikan peta respons", () async {
     final transport = FakeTransport()
-      ..enqueue(const ApiResponse(200, {"token": "tok", "user": {"id": 1}}));
+      ..enqueue(const ApiResponse(200, {
+        "token": "tok",
+        "user": {"id": 1}
+      }));
     final client = ApiClient(transport);
 
     final body = await client.login("a@x.test", "secret", "mobile");
@@ -20,15 +23,15 @@ void main() {
 
   test("non-2xx melempar ApiException dengan message server", () async {
     final transport = FakeTransport()
-      ..enqueue(const ApiResponse(422, {"message": "Email atau kata sandi salah."}));
+      ..enqueue(
+          const ApiResponse(422, {"message": "Email atau kata sandi salah."}));
     final client = ApiClient(transport);
 
     expect(
       () => client.login("a@x.test", "x", "mobile"),
       throwsA(
-        isA<ApiException>()
-            .having((e) => e.status, "status", 422)
-            .having((e) => e.message, "message", "Email atau kata sandi salah."),
+        isA<ApiException>().having((e) => e.status, "status", 422).having(
+            (e) => e.message, "message", "Email atau kata sandi salah."),
       ),
     );
   });
@@ -37,13 +40,20 @@ void main() {
     final transport = FakeTransport()
       ..enqueue(const ApiResponse(200, {
         "data": [
-          {"id": 1, "ticket": "A-1", "status": "ready", "total": 1000, "paid_amount": 1000},
+          {
+            "id": 1,
+            "ticket": "A-1",
+            "status": "ready",
+            "total": 1000,
+            "paid_amount": 1000
+          },
         ],
         "meta": {"current_page": 2, "last_page": 4},
       }));
     final client = ApiClient(transport);
 
-    final page = await client.listOrders("tok", page: 2, status: OrderStatus.ready);
+    final page =
+        await client.listOrders("tok", page: 2, status: OrderStatus.ready);
 
     expect(page.orders.single.status, OrderStatus.ready);
     expect(page.currentPage, 2);
@@ -53,7 +63,13 @@ void main() {
   test("advanceOrderStatus mengambil objek dari data", () async {
     final transport = FakeTransport()
       ..enqueue(const ApiResponse(200, {
-        "data": {"id": 5, "ticket": "A-5", "status": "drying", "total": 0, "paid_amount": 0},
+        "data": {
+          "id": 5,
+          "ticket": "A-5",
+          "status": "drying",
+          "total": 0,
+          "paid_amount": 0
+        },
       }));
     final client = ApiClient(transport);
 

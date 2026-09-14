@@ -22,15 +22,20 @@ enum Role {
 
   bool get canViewDashboard => this == Role.owner || this == Role.manager;
 
-  bool get canCreateOrder => this == Role.owner || this == Role.manager || this == Role.cashier;
+  bool get canCreateOrder =>
+      this == Role.owner || this == Role.manager || this == Role.cashier;
 
   bool get canAdvanceOrder =>
       this == Role.owner || this == Role.manager || this == Role.operator;
 
-  bool get canCancelOrder => this == Role.owner || this == Role.manager || this == Role.cashier;
+  bool get canCancelOrder =>
+      this == Role.owner || this == Role.manager || this == Role.cashier;
 
   bool get canViewOrders =>
-      this == Role.owner || this == Role.manager || this == Role.cashier || this == Role.operator;
+      this == Role.owner ||
+      this == Role.manager ||
+      this == Role.cashier ||
+      this == Role.operator;
 
   bool get isDriver => this == Role.driver;
 }

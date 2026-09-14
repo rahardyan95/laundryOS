@@ -12,10 +12,17 @@ void main() {
   });
 
   test("canTransition hanya maju atau batalkan dari diterima", () {
-    expect(OrderMachine.canTransition(OrderStatus.received, OrderStatus.washing), isTrue);
-    expect(OrderMachine.canTransition(OrderStatus.received, OrderStatus.cancelled), isTrue);
-    expect(OrderMachine.canTransition(OrderStatus.washing, OrderStatus.cancelled), isFalse);
-    expect(OrderMachine.canTransition(OrderStatus.washing, OrderStatus.ready), isFalse);
+    expect(
+        OrderMachine.canTransition(OrderStatus.received, OrderStatus.washing),
+        isTrue);
+    expect(
+        OrderMachine.canTransition(OrderStatus.received, OrderStatus.cancelled),
+        isTrue);
+    expect(
+        OrderMachine.canTransition(OrderStatus.washing, OrderStatus.cancelled),
+        isFalse);
+    expect(OrderMachine.canTransition(OrderStatus.washing, OrderStatus.ready),
+        isFalse);
   });
 
   test("label status dan pembayaran bahasa Indonesia", () {

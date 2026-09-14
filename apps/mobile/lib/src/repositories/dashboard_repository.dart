@@ -10,7 +10,9 @@ class DashboardRepository {
 
   Future<DashboardSummary> summary({String? outletId}) async {
     final token = await _tokenProvider();
-    if (token == null) throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    if (token == null) {
+      throw ApiException(401, "Sesi berakhir. Silakan masuk kembali.");
+    }
     return _api.dashboardSummary(token, outletId: outletId);
   }
 }

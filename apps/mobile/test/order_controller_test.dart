@@ -13,20 +13,33 @@ void main() {
     final transport = FakeTransport()
       ..enqueue(const ApiResponse(200, {
         "data": [
-          {"id": 1, "ticket": "A-1", "status": "received", "total": 100, "paid_amount": 0},
+          {
+            "id": 1,
+            "ticket": "A-1",
+            "status": "received",
+            "total": 100,
+            "paid_amount": 0
+          },
         ],
         "meta": {"current_page": 1, "last_page": 2},
       }))
       ..enqueue(const ApiResponse(200, {
         "data": [
-          {"id": 2, "ticket": "A-2", "status": "ready", "total": 200, "paid_amount": 200},
+          {
+            "id": 2,
+            "ticket": "A-2",
+            "status": "ready",
+            "total": 200,
+            "paid_amount": 200
+          },
         ],
         "meta": {"current_page": 2, "last_page": 2},
       }));
 
     final store = InMemorySessionStore();
     await store.saveToken("tok");
-    final controller = OrderController(OrderRepository(ApiClient(transport), store.token));
+    final controller =
+        OrderController(OrderRepository(ApiClient(transport), store.token));
 
     await controller.refresh();
     expect(controller.orders, hasLength(1));
@@ -42,17 +55,30 @@ void main() {
     final transport = FakeTransport()
       ..enqueue(const ApiResponse(200, {
         "data": [
-          {"id": 1, "ticket": "A-1", "status": "received", "total": 100, "paid_amount": 0},
+          {
+            "id": 1,
+            "ticket": "A-1",
+            "status": "received",
+            "total": 100,
+            "paid_amount": 0
+          },
         ],
         "meta": {"current_page": 1, "last_page": 1},
       }))
       ..enqueue(const ApiResponse(200, {
-        "data": {"id": 1, "ticket": "A-1", "status": "washing", "total": 100, "paid_amount": 0},
+        "data": {
+          "id": 1,
+          "ticket": "A-1",
+          "status": "washing",
+          "total": 100,
+          "paid_amount": 0
+        },
       }));
 
     final store = InMemorySessionStore();
     await store.saveToken("tok");
-    final controller = OrderController(OrderRepository(ApiClient(transport), store.token));
+    final controller =
+        OrderController(OrderRepository(ApiClient(transport), store.token));
 
     await controller.refresh();
     final ok = await controller.advance(controller.orders.first);
