@@ -62,7 +62,6 @@ export abstract class ApiClient {
   abstract downloadSalesCsv(outletId?: string, from?: string, to?: string): Promise<Blob>;
 
   abstract getSubscription(): Promise<Subscription>;
-  abstract updateSubscription(plan: string): Promise<Subscription>;
   abstract createOutlet(input: CreateOutletInput): Promise<Outlet>;
   abstract inviteUser(input: InviteUserInput): Promise<User>;
 

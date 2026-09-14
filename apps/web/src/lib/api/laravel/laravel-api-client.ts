@@ -327,13 +327,6 @@ export class LaravelApiClient extends ApiClient {
     return Mappers.subscription(res.data);
   }
 
-  async updateSubscription(plan: string): Promise<Subscription> {
-    const res = await this.http.patch<{ data: WireSubscription }>("/subscription", { plan });
-    const payload = await this.me();
-    SessionManager.set(payload);
-    return Mappers.subscription(res.data);
-  }
-
   async createOutlet(input: CreateOutletInput): Promise<Outlet> {
     const tenantId = this.tenantId();
     const res = await this.http.post<{ data: WireOutlet }>("/outlets", {

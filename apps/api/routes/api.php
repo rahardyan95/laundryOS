@@ -52,7 +52,6 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('/auth/device-token', [DeviceTokenController::class, 'destroy']);
 
         Route::get('/subscription', [SubscriptionController::class, 'show']);
-        Route::patch('/subscription', [SubscriptionController::class, 'update']);
 
         Route::get('/outlets', [OutletController::class, 'index']);
         Route::get('/outlets/{outlet}', [OutletController::class, 'show']);

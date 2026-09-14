@@ -10,10 +10,17 @@ use App\Domains\Identity\Enums\TenantStatus;
 use App\Domains\Identity\Models\Outlet;
 use App\Domains\Identity\Models\Tenant;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operations\Enums\CashEntryType;
+use App\Domains\Operations\Enums\DeliveryTaskStatus;
+use App\Domains\Operations\Enums\DeliveryTaskType;
+use App\Domains\Operations\Models\CashClosing;
+use App\Domains\Operations\Models\CashEntry;
+use App\Domains\Operations\Models\DeliveryTask;
 use App\Domains\Ordering\Actions\CancelOrder;
 use App\Domains\Ordering\Actions\CreateOrder;
 use App\Domains\Ordering\Actions\TransitionOrderStatus;
 use App\Domains\Ordering\Enums\OrderStatus;
+use App\Domains\Ordering\Models\Order;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -117,7 +124,7 @@ class DatabaseSeeder extends Seeder
             OrderStatus $target = OrderStatus::Received,
             bool $cancel = false,
             int $daysAgo = 0
-        ) use ($create, $advance, $operator): void {
+        ) use ($create, $advance, $operator): ?Order {
             $order = $create->handle($actor, [
                 'outlet_id' => $outlet->id,
                 'customer_id' => $customer->id,
@@ -132,7 +139,7 @@ class DatabaseSeeder extends Seeder
             if ($cancel) {
                 app(CancelOrder::class)->handle($order, $actor, 'Demo: dibatalkan customer');
 
-                return;
+                return null;
             }
 
             $cursor = OrderStatus::Received;
@@ -147,6 +154,8 @@ class DatabaseSeeder extends Seeder
                 $order->history()->update(['created_at' => $when, 'updated_at' => $when]);
                 $order->items()->update(['created_at' => $when, 'updated_at' => $when]);
             }
+
+            return $order;
         };
 
         $CS = $services['Cuci Setrika'];
@@ -155,16 +164,109 @@ class DatabaseSeeder extends Seeder
         $CKilat = $services['Cuci Kilat 6 Jam'];
         $Sepatu = $services['Cuci Sepatu'];
 
-        $make($kasir, $kemang, $customers['Dewi Lestari'], [[$CS, 4.5]], 49500, OrderStatus::Washing);
+        $dewi = $make($kasir, $kemang, $customers['Dewi Lestari'], [[$CS, 4.5]], 49500, OrderStatus::Washing);
         $make($kasir, $kemang, $customers['Agus Prasetyo'], [[$CK, 3], [$Sepatu, 1]], 25000, OrderStatus::Drying);
-        $make($kasir, $kemang, $customers['Putu Ayu Wulandari'], [[$CKilat, 2.5]], 40000, OrderStatus::Ready);
+        $putu = $make($kasir, $kemang, $customers['Putu Ayu Wulandari'], [[$CKilat, 2.5]], 40000, OrderStatus::Ready);
         $make($kasir, $kemang, $customers['Hendra Wijaya'], [[$SS, 5]], 0, OrderStatus::Ironing);
-        $make($kasir, $kemang, $customers['Ratna Kusuma'], [[$CK, 6]], 0, OrderStatus::Received);
-        $make($kasir, $kemang, $customers['Dewi Lestari'], [[$CS, 3.2]], 35200, OrderStatus::Completed, false, 2);
+        $ratna = $make($kasir, $kemang, $customers['Ratna Kusuma'], [[$CK, 6]], 0, OrderStatus::Received);
+        $dewiLama = $make($kasir, $kemang, $customers['Dewi Lestari'], [[$CS, 3.2]], 35200, OrderStatus::Completed, false, 2);
         $make($kasir, $kemang, $customers['Agus Prasetyo'], [[$CK, 4]], 28000, OrderStatus::Completed, false, 3);
-        $make($kasirTbt, $tebet, $customers['Fajar Nugroho'], [[$CS, 5.5]], 60500, OrderStatus::Washing);
+        $fajar = $make($kasirTbt, $tebet, $customers['Fajar Nugroho'], [[$CS, 5.5]], 60500, OrderStatus::Washing);
         $make($kasirTbt, $tebet, $customers['Bayu Setiawan'], [[$CKilat, 1.8]], 28800, OrderStatus::Ready);
         $make($kasirTbt, $tebet, $customers['Intan Permata'], [[$CK, 2.2]], 0, OrderStatus::Received);
         $make($kasirTbt, $tebet, $customers['Fajar Nugroho'], [[$Sepatu, 1]], 0, OrderStatus::Received, true);
+
+        // --- Kas demo ---------------------------------------------------------
+        // Instalasi bersih membuat tab Kas kosong, jadi peran kasir/manajer tidak
+        // punya apa pun untuk dinilai. Pemasukan mengikuti order yang sudah dibayar.
+        $kasEntries = [
+            [$kemang, $kasir, $dewi, 49500, 'cash'],
+            [$kemang, $kasir, $putu, 40000, 'transfer'],
+            [$kemang, $kasir, $dewiLama, 35200, 'cash'],
+            [$tebet, $kasirTbt, $fajar, 60500, 'cash'],
+        ];
+
+        foreach ($kasEntries as [$outlet, $actor, $order, $amount, $method]) {
+            CashEntry::create([
+                'tenant_id' => $tenant->id,
+                'outlet_id' => $outlet->id,
+                'order_id' => $order->id,
+                'created_by_id' => $actor->id,
+                'type' => CashEntryType::Income,
+                'category' => 'order',
+                'amount' => $amount,
+                'payment_method' => $method,
+                'note' => "Pembayaran order {$order->ticket}",
+                'occurred_at' => $order->created_at->toDateString(),
+            ]);
+        }
+
+        foreach ([
+            ['Beli deterjen & pewangi', 185000, 2],
+            ['Token listrik outlet', 100000, 1],
+            ['Servis mesin cuci', 250000, 3],
+        ] as [$note, $amount, $daysAgo]) {
+            CashEntry::create([
+                'tenant_id' => $tenant->id,
+                'outlet_id' => $kemang->id,
+                'order_id' => null,
+                'created_by_id' => $kasir->id,
+                'type' => CashEntryType::Expense,
+                'category' => 'operasional',
+                'amount' => $amount,
+                'payment_method' => 'cash',
+                'note' => $note,
+                'occurred_at' => now()->subDays($daysAgo)->toDateString(),
+            ]);
+        }
+
+        // Kas kemarin sudah ditutup supaya alur "tutup kas" punya contoh nyata.
+        CashClosing::create([
+            'tenant_id' => $tenant->id,
+            'outlet_id' => $kemang->id,
+            'closed_by_id' => $users['manager@laundryos.test']->id,
+            'date' => now()->subDay()->toDateString(),
+            'note' => 'Demo: kas kemarin sudah dihitung.',
+        ]);
+
+        // --- Tugas antar-jemput demo -----------------------------------------
+        $kurir = $users['kurir@laundryos.test'];
+
+        DeliveryTask::create([
+            'tenant_id' => $tenant->id,
+            'outlet_id' => $kemang->id,
+            'order_id' => $ratna->id,
+            'driver_id' => $kurir->id,
+            'type' => DeliveryTaskType::Pickup,
+            'scheduled_at' => now()->setTime(10, 0),
+            'address' => 'Jl. Bangka XI No. 2, Jakarta Selatan',
+            'status' => DeliveryTaskStatus::Assigned,
+            'notes' => 'Ambil 6 kg cuci kering.',
+        ]);
+
+        DeliveryTask::create([
+            'tenant_id' => $tenant->id,
+            'outlet_id' => $kemang->id,
+            'order_id' => $putu->id,
+            'driver_id' => $kurir->id,
+            'type' => DeliveryTaskType::Delivery,
+            'scheduled_at' => now()->setTime(14, 0),
+            'address' => 'Jl. Kemang Selatan VIII No. 12',
+            'status' => DeliveryTaskStatus::InProgress,
+            'notes' => 'Antar sebelum jam 5 sore.',
+        ]);
+
+        DeliveryTask::create([
+            'tenant_id' => $tenant->id,
+            'outlet_id' => $kemang->id,
+            'order_id' => $dewiLama->id,
+            'driver_id' => $kurir->id,
+            'type' => DeliveryTaskType::Delivery,
+            'scheduled_at' => now()->subDay()->setTime(16, 30),
+            'address' => 'Jl. Bangka IX No. 4, Jakarta Selatan',
+            'status' => DeliveryTaskStatus::Done,
+            'notes' => 'Diterima langsung oleh pelanggan.',
+            'completed_at' => now()->subDay()->setTime(16, 55),
+        ]);
     }
 }
