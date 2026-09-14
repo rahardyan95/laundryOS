@@ -103,4 +103,4 @@ Semua langkah build sudah ada di `apps/mobile/README.md` §Rilis; urutan go-live
 | Push FCM benar-benar terkirim | butuh proyek Firebase + `google-services.json` | §4 langkah 5 |
 | AAB bertanda tangan + listing store | butuh keystore produksi + akun Play | §4 langkah 1–4 |
 | Restore otomatis terjadwal | drill restore sengaja manual | §5 |
-| Payment gateway, WhatsApp Business, printer ESC/POS, WAF/pen-test | pasca-MVP, butuh vendor | backlog `docs/CHECKPOINT.md` §5 |
+| Payment gateway, WhatsApp Business, printer ESC/POS, WAF/pen-test | pasca-MVP, butuh vendor | backlog `docs/CHECKPOINT.md` §7 |
