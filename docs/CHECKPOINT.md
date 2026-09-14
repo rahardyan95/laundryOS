@@ -1,20 +1,57 @@
 # CHECKPOINT — LaundryOS
 
-**Terakhir diverifikasi:** 2026-09-14 · **Status: semua gate hijau**
-Dokumen pendamping: [`AGENTS.md`](../AGENTS.md) (aturan kode) · [`docs/CARA-MENJALANKAN.md`](CARA-MENJALANKAN.md) (runbook lengkap) ·
-[`apps/web/DESIGN.md`](../apps/web/DESIGN.md) (identitas visual) · [`docs/superpowers/plans/2026-09-14-integrasi-web-mobile.md`](superpowers/plans/2026-09-14-integrasi-web-mobile.md) (plan integrasi terakhir).
+**Terakhir diverifikasi:** 2026-09-14 · **Status: semua gate hijau, seluruh pekerjaan go-live yang bisa
+dikerjakan di repo sudah selesai** (sisa hanya prasyarat pihak ketiga, lihat §7).
+
+Dokumen pendamping:
+
+| Dokumen | Untuk apa |
+|---|---|
+| [`AGENTS.md`](../AGENTS.md) | aturan kode (R1 OOP, R2 bukti verifikasi, R3 sistem UI mobile) — wajib dibaca sebelum menulis kode |
+| [`docs/CARA-MENJALANKAN.md`](CARA-MENJALANKAN.md) | setup + workflow harian + troubleshooting panjang |
+| [`docs/GO-LIVE-CHECKLIST.md`](GO-LIVE-CHECKLIST.md) | rilis ke pelanggan: prasyarat pihak ketiga, urutan deploy, bukti verifikasi, rilis mobile |
+| [`infra/DEPLOY.md`](../infra/DEPLOY.md) | runbook VPS salin-tempel (TLS, backup/restore, rollback) |
+| [`apps/mobile/README.md`](../apps/mobile/README.md) | rilis Android (keystore, appbundle, guard `API_BASE`), push FCM, golden |
+| [`apps/web/DESIGN.md`](../apps/web/DESIGN.md) | identitas visual web (sumber palet "Pine & Lime") |
 
 ---
 
-## 0. Mulai di sini (kontributor berikutnya)
+## 0. Status per area
+
+| Area | Status | Catatan |
+|---|---|---|
+| `apps/api` | ✅ | Laravel 13 modular monolith; 6 domain (Identity, Ordering, Operations, Catalog, Billing, Support); 141 test |
+| `apps/web` | ✅ | Next 16, dua mode (`mock` dan `laravel`) dengan paritas mapper; 51 unit + 19 E2E mock + 2 E2E API nyata |
+| `apps/mobile` | ✅ | Flutter 3.47.4; peran owner/manajer, kasir, operator, kurir; offline baca+tulis; 81 test + 4 golden |
+| `apps/site` | ✅ | Astro statis + sitemap + robots; ikut ter-deploy di compose prod (`site`) |
+| `infra` | ✅ | Dev 6/6 container; prod: TLS siap-aktif, backup/restore aman, image bertag, `deploy-prod.sh` |
+| CI | ✅ | Gate gaya/tipe/test + E2E API nyata + build image produksi + validasi compose prod |
+| Push FCM, rilis Play, VPS | ⏳ pihak ketiga | Wiring sudah ada; butuh akun/berkas eksternal (lihat §7) |
+
+Riwayat commit terakhir (setiap pesan commit memuat bukti per item):
+
+```
+652827d docs: checklist go-live dan status tiga batch perbaikan
+75d6eac feat(api): tegakkan langganan pada baca, jalur operator untuk paket, dan seeder demo kas/tugas
+eb83f97 ci: tangkap regresi integrasi (E2E API nyata, image produksi) dan pin Flutter
+5c9ae18 feat(infra): TLS siap pakai, restore/rollback aman, dan deploy situs pemasaran
+b525e2d chore(mobile): adopsi dart format di lib/ dan test/
+7a355ff feat(mobile): guard rilis, cache/antrean offline ber-identitas, wiring device token, golden test
+2539a65 feat(api): provisi tenant, isolasi foto bukti, dan pelacakan publik yang aman
+45f7f45 feat(mobile): tema Pine & Lime + widget bersama; fix: keamanan, bootstrap, dan unggah bukti
+```
+
+---
+
+## 1. Mulai cepat
 
 ```bash
-cd infra && docker compose up -d                     # pgsql, redis, mailpit, api(:8000), worker, scheduler
-docker compose run --rm -T api composer install --no-interaction   # vendor/ (hanya klon bersih)
-docker compose run --rm -T api php artisan migrate --force
+cd infra && docker compose up -d                                   # pgsql, redis, mailpit, api(:8000), worker, scheduler
+docker compose run --rm -T api composer install --no-interaction    # vendor/ (hanya klon bersih)
+docker compose run --rm -T api php artisan migrate:fresh --seed     # skema + data demo (kas & tugas ikut terisi)
 cd .. && pnpm install
 
-# web, mode API nyata (integrai penuh)
+# web: mode API nyata (integrasi penuh)
 NEXT_PUBLIC_API_MODE=laravel NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1 pnpm --filter web dev --port 3000
 
 # mobile di emulator Android
@@ -22,124 +59,120 @@ cd apps/mobile && flutter pub get
 flutter run -d emulator-5554 --dart-define=API_BASE=http://10.0.2.2:8000/api/v1
 ```
 
-`apps/api/.env` beserta `APP_KEY` dibuat otomatis oleh `infra/api-entrypoint.sh` saat container `api` pertama
-kali jalan — tidak ada langkah manual.
-
-Akun demo (semua password `password`): `owner@` · `manager@` · `kasir@` · `operator@` · `kurir@laundryos.test`.
-Mailpit `:8025` · pelacakan pelanggan tanpa login: `http://localhost:3000/lacak`.
-Untuk rilis ke pelanggan: [`docs/GO-LIVE-CHECKLIST.md`](GO-LIVE-CHECKLIST.md) (prasyarat pihak ketiga,
-urutan deploy, bukti verifikasi, rilis mobile).
-
-### Peta repo
-
-| Path | Isi | Status |
-|---|---|---|
-| `apps/api` | Laravel 13 (modular monolith: Identity, Ordering, Operations, Catalog, Billing, Support) | ✅ R0–R3 + hardening |
-| `apps/web` | Dashboard/POS Next 16 (mock + API nyata) | ✅ selesai |
-| `apps/mobile` | Flutter: owner/manajer, kasir, operator, kurir | ✅ fitur lengkap, UI diperbarui 2026-09-14 |
-| `apps/site` | Astro marketing/SEO | ✅ 3 halaman |
-| `infra` | Docker dev + prod, nginx, backup, runbook deploy | ✅ dev jalan, prod siap dieksekusi |
-| `docs/` | BRD/PRD/FRD, plan per fase, laporan keamanan, checkpoint ini | ✅ |
+- `apps/api/.env` + `APP_KEY` dibuat otomatis oleh `infra/api-entrypoint.sh` — tidak ada langkah manual.
+- Akun demo (password `password`): `owner@` · `manager@` · `kasir@` · `operator@` · `kurir@laundryos.test`.
+- Mailpit `:8025` · lacak pelanggan tanpa login: `http://localhost:3000/lacak` · web default mode `mock` (tanpa backend).
+- Reset data demo kapan saja: `docker compose run --rm -T api php artisan migrate:fresh --seed`.
+- Perintah operator (tidak dipakai di dev sehari-hari): `php artisan tenant:provision …` (buat tenant+outlet+owner)
+  dan `php artisan tenant:plan {id|email} {plan}` (ubah paket).
 
 ---
 
-## 1. Gate verifikasi
+## 2. Gate verifikasi (definition of done)
 
-Dijalankan dari root, kecuali disebut lain. Hasil terakhir 2026-09-14 (stack Docker hidup, 6/6 service Up).
+Dijalankan dari root kecuali disebut lain; jalankan **semua** sebelum menyatakan selesai (AGENTS.md R2).
 
-| Gate | Perintah | Hasil |
+| Gate | Perintah | Hasil terakhir |
 |---|---|---|
 | Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **141 passed, 484 assertions** |
-| Backend gaya | `… php vendor/bin/pint --test` | **PASS, 171 files** |
-| Backend analisis | `… composer analyse` (Larastan L5) | 0 error (baseline ada) |
+| Backend gaya | `… php vendor/bin/pint --test` | PASS, 171 file |
+| Backend analisis | `… composer analyse` (Larastan L5) | 0 error |
 | Coverage | `… composer test:coverage` | 92,3% (gate 90) |
 | Web tipe/lint | `pnpm --filter web exec tsc --noEmit` · `pnpm --filter web exec eslint src` | 0 · 0 |
-| Web unit | `pnpm --filter web exec vitest run` | **51 passed** |
-| Web build | `pnpm --filter web build` | exit 0, 19 route |
-| Web E2E mock | `pnpm --filter web test:e2e` | **19 passed** |
-| Web E2E API nyata | `pnpm --filter web test:e2e:laravel` | **2 passed** |
-| Mobile analisis | `cd apps/mobile && flutter analyze` | **0 issue** |
-| Mobile test | `flutter test` | **81 passed** (termasuk 4 golden) |
+| Web unit | `pnpm --filter web exec vitest run` | 51 passed |
+| Web build | `pnpm --filter web build` | exit 0 |
+| Web E2E mock | `pnpm --filter web test:e2e` | 19 passed |
+| Web E2E API nyata | `pnpm --filter web test:e2e:laravel` | 2 passed |
+| Mobile analisis | `cd apps/mobile && flutter analyze` | 0 issue |
+| Mobile test | `flutter test` | 81 passed (4 berkas golden) |
 | Mobile build | `flutter build apk --debug` | exit 0 |
-| Mobile di perangkat | `flutter run -d emulator-5554 --dart-define=API_BASE=…` | render + data API nyata |
-| Site | `pnpm --filter site build` | 3 halaman |
-| Infra prod | `docker compose -f infra/docker-compose.prod.yml config` | valid (butuh `infra/.env.prod`) |
+| Site | `pnpm --filter site build` | 3 halaman + sitemap |
+| Infra prod | `cd infra && cp .env.prod.example .env.prod && docker compose -f docker-compose.prod.yml config --quiet` | valid |
+| Nginx | `docker run --rm --add-host api:127.0.0.1 --add-host web:127.0.0.1 --add-host site:127.0.0.1 -v "$PWD/infra/nginx/laundryos.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.27-alpine nginx -t` | successful |
 
-> Klon bersih tidak lagi butuh langkah manual `.env`: `infra/api-entrypoint.sh` menyalin `.env.example`
-> dan membuat `APP_KEY` sendiri (bukti di §9). Commands yang benar untuk analisis/coverage adalah
-> `composer analyse` / `composer test:coverage` (bukan `php composer …`).
+Menjalankan sebagian saja (hemat waktu saat iterasi):
+
+```bash
+docker compose run --rm -T api php artisan test --filter=SubscriptionTest          # satu kelas
+docker compose run --rm -T api php artisan test --filter=nama_test_satu_metode
+pnpm --filter web exec vitest run -t "nama test" ; pnpm --filter web exec playwright test -g "judul"
+cd apps/mobile && flutter test test/offline_identity_test.dart
+cd apps/mobile && flutter test --update-goldens test/golden_test.dart              # regenerasi golden
+```
+
+Catatan: perintah analisis/coverage yang benar adalah `composer analyse` dan `composer test:coverage`
+(bukan `php composer …`). Klon bersih tidak butuh `.env` manual: entrypoint menyalin `.env.example`
+dan membuat `APP_KEY` (dan melewati pembuatan kunci bila `vendor/` belum ada — jalankan `composer install` dulu).
 
 ---
 
-## 2. Peta kode
+## 3. Peta kode & "mau mengubah X, sentuh di mana"
 
-**Mobile (`apps/mobile/lib/`)** — arah ketergantungan satu arah: `screens`/`widgets` → `state` → `repositories` → `api`.
-
-| Folder | Isi |
+| Path | Isi |
 |---|---|
-| `src/theme/` | `AppPalette`, `AppSpacing`/`AppRadii`/`AppMotion`, `AppTypography`, `AppStatusTones`, `AppTheme` |
-| `src/widgets/` | `AppScaffold`, `AsyncSection`, `EmptyState`, `ErrorNotice`, `StatusChip`, `SurfaceCard`, `StatTile`, `SectionHeader`, `ConnectivityBanner`, `BrandMark`, `LogoutButton` |
-| `src/screens/` | `login`, `home_shell` (navigasi per peran), `dashboard`, `orders`, `new_order`, `tasks`, `notifications` |
-| `src/state/` | `ChangeNotifier` per domain: auth, order, delivery task, catalog, notification, dashboard, connectivity, sync |
-| `src/domain/` | Dart murni: `OrderMachine`, `TaskMachine`, `StatusKind`, `Format`, `Role` |
-| `src/api/` | `ApiTransport` + `HttpApiTransport`, dekorator `CachingApiTransport` (offline baca) dan `OfflineApiTransport` (offline tulis + antrean idempotensi) |
-| `assets/fonts/` | Plus Jakarta Sans variable + `OFL.txt` |
+| `apps/api/app/Domains/<Domain>/` | `Models`, `Http/{Controllers,Requests,Resources}`, `Actions`, `Enums`, `Policies` |
+| `apps/api/routes/api.php` | seluruh permukaan API v1 (throttle, group auth, route publik) |
+| `apps/web/src/{app,components,lib}` | App Router, komponen, logika (`lib/api/mock` + `lib/api/laravel` + mappers) |
+| `apps/mobile/lib/src/{theme,widgets,screens,state,domain,api,repositories}` | arah ketergantungan satu arah: `screens/widgets → state → repositories → api` |
+| `apps/site/src` | halaman Astro + config situs (sitemap/robots/URL publik) |
+| `infra/` | compose dev & prod, nginx (+`nginx/tls`), certbot, `backup-prod.sh`, `restore.sh`, `deploy-prod.sh`, `DEPLOY.md` |
+| `.github/workflows/` | `api.yml`, `web.yml`, `mobile.yml` |
 
-**Web (`apps/web/src/`)** — `lib/` (logika + `api/mock` dan `api/laravel`), `app/` (App Router), `e2e/` (mock) dan `e2e-laravel/` (API nyata).
+Indeks tugas yang paling sering muncul:
 
-**API (`apps/api/app/Domains/`)** — tiap domain punya `Models`, `Http/{Controllers,Requests,Resources}`, `Actions`, `Enums`, `Policies`.
+| Mau apa | Sentuh apa |
+|---|---|
+| Tambah/ubah endpoint API | `Domains/<Domain>/Http/Controllers` + `routes/api.php` + `Requests`/`Resources` + `Policies`, lalu test di `tests/Feature/<Domain>` |
+| Ubah status order / tugas | `Ordering/Enums/OrderStatus`, `Ordering/Actions/TransitionOrderStatus`, mobile `domain/order_machine.dart` + `domain/status_kind.dart` (jaga paritas enum API ↔ mobile) |
+| Tambah layar mobile | `screens/` (bungkus `AppScaffold` + `AsyncSection`), widget bersama di `widgets/`, warna/jarak dari `theme/`; tambah test widget |
+| Ubah tampilan web | `src/app/**` + `src/components/**`; kalau menyentuh data: perbarui **mock dan laravel** (`lib/api/mock`, `lib/api/laravel/mappers.ts`) supaya paritas tetap |
+| Ubah skema database | migration baru di `database/migrations` (jangan edit migrasi lama), sesuaikan `Models` + `Factories` + `Seeders` + test |
+| Ubah warna/typography mobile | `lib/src/theme/` saja; kontras dijaga `test/theme_test.dart`, bentuk/jarak `test/small_screen_layout_test.dart` + golden |
+| Foto bukti antar-jemput | `Operations/Http/Controllers/DeliveryTaskController` (`proof`, `showProof`), `DeliveryTaskResource` (URL bertanda tangan), `config/filesystems.php` (`proof_disk`) |
+| Aturan langganan/limit | `Identity/Http/Middleware/EnsureSubscriptionActive`, `Billing/Actions/PlanLimits`, `config/plans.php`, command `tenant:plan` |
+| Pelacakan publik `/track` | `Ordering/Http/Controllers/TrackController` + `Ordering/Support/TicketNumberGenerator` |
+| Deploy / ops | `infra/DEPLOY.md` (runbook), `deploy-prod.sh`, `backup-prod.sh`, `restore.sh` |
+| CI | `.github/workflows/*.yml` (job `images` juga memvalidasi compose prod) |
+
+Invarian yang mudah dilanggar (pernah menjadi bug):
+
+1. **Tenant scope fail-closed** — `TenantScope` menutup query saat tidak ada konteks; jangan lepas kecuali
+   untuk endpoint publik yang diautentikasi faktor lain (mis. `/track`, penyaji bukti bertanda tangan).
+2. **Paritas mock ↔ Laravel** — perubahan bentuk data harus diterapkan di dua tempat + `mappers.ts`.
+3. **Identitas pada data offline mobile** — cache & antrean terikat `userId`; jangan menulis cache saat belum masuk.
+4. **URL berkas tidak boleh publik** — bukti foto disajikan lewat URL bertanda tangan kedaluwarsa 30 menit,
+   disk default `local` (privat).
+5. **`X-Forwarded-For` hanya boleh dipercaya dari proxy sendiri** — `TRUSTED_PROXIES` diisi subnet proxy
+   (prod `172.28.0.0/16`), nginx menimpa header; kalau tidak, rate limit bisa dipalsukan.
+6. **Nilai `NEXT_PUBLIC_*` / `PUBLIC_*` dikompilasi saat build**, bukan runtime: mengubahnya butuh deploy ulang.
 
 ---
 
-## 3. Sistem UI mobile (ringkas, rinci di `AGENTS.md` R3)
+## 4. Konfigurasi & environment
+
+| Variabel | Efek | Dev | Prod |
+|---|---|---|---|
+| `APP_KEY` | kunci enkripsi cookie/sesi; tanpa ini login 500 | dibuat otomatis entrypoint | wajib diisi `base64:…` (prod-entrypoint gagal cepat) |
+| `TRUSTED_PROXIES` | siapa yang boleh menentukan IP klien | kosong (tanpa proxy) | `172.28.0.0/16` (subnet nginx) |
+| `FRONTEND_URL` vs `CORS_ALLOWED_ORIGINS` | tautan reset (satu origin) vs daftar origin CORS (boleh banyak) | compose dev: `:3000` + `:3100` | host aplikasi |
+| `SANCTUM_STATEFUL_DOMAINS` | domain yang memakai sesi cookie SPA | compose dev | host aplikasi |
+| `SESSION_SECURE_COOKIE` | cookie hanya lewat HTTPS | tidak diset | `true` — **login web gagal sampai TLS aktif** |
+| `FILESYSTEM_PROOF_DISK` | lokasi foto bukti | default `local` (privat) | `s3` (bucket privat) |
+| `PUBLIC_SITE_URL` / `PUBLIC_APP_URL` / `PUBLIC_API_URL` | di-*bake* ke HTML saat build image web/site | — | wajib (`:?` di compose prod) |
+| `NEXT_PUBLIC_API_MODE` / `NEXT_PUBLIC_API_URL` | web memakai mock atau API nyata | `.env.local` | build arg |
+| `API_BASE` (dart-define) | alamat API di APK; rilis **wajib** `https://…` non-loopback | `http://10.0.2.2:8000/api/v1` | `https://app.<domain>/api/v1` |
+
+---
+
+## 5. Sistem UI mobile (ringkas; rinci di `AGENTS.md` R3)
 
 - Dial **ENERGY 1 / RHYTHM 2 / MOTION 1**; identitas "Pine & Lime" sama dengan web.
-- Semua warna/jarak/radius/durasi dari `src/theme/`; warna status lewat `StatusKind` (domain) → `StatusTones` (tema).
-- Keadaan data wajib lewat `AsyncSection`; keadaan kosong menyebut sebab + tindakan.
-- Kontras teks ≥ 4.5:1 dijaga otomatis oleh `test/theme_test.dart` (sudah diverifikasi bisa gagal).
-- Mode gelap ikut sistem; keduanya diuji di `test/small_screen_layout_test.dart` pada 375x667.
-
----
-
-## 4. Verifikasi 2026-09-14 (integrasi + UI mobile)
-
-**Integrasi web ↔ mobile ↔ API** (stack nyata, web `:3000` mode Laravel, mobile di emulator Android 14):
-login web memakai cookie httpOnly (token di storage `null`), `/orders` 7 baris dari PostgreSQL, `/tasks` memanggil
-`/delivery-tasks` + `/users?role=driver`, 0 console error; mobile kurir menampilkan kartu tugas nyata dan notifikasi
-`Tugas Pickup baru`, owner menampilkan KPI nyata (`Piutang Rp98.000`, `Kas masuk Rp177.700`).
-
-**Cacat yang ditemukan & diperbaiki:**
-
-1. **CORS salah origin** — `FRONTEND_URL` dipakai ganda (daftar CORS dan tautan reset). Daftar dipindah ke
-   `CORS_ALLOWED_ORIGINS` (`config/cors.php`); `FRONTEND_URL` kembali satu origin.
-2. **`_TypeError` di `ApiClient`** — `listCustomers`/`listServices`/`listNotifications` merantai
-   `.whereType().map().toList()` dari nilai `dynamic` → `List<dynamic>` gagal type-check runtime, errornya ditelan
-   `catch (_)` sehingga daftar tampak kosong. Diperbaiki dengan helper bertipe `_collection<T>()`.
-3. **`LocaleDataException`** — kartu tugas dan baris notifikasi dirender `ErrorWidget` karena simbol tanggal `id_ID`
-   belum dimuat. Sekarang `Format` punya jalur cadangan tanpa locale sehingga tidak pernah gagal, dan `main()`
-   memanggil `Format.initialize()`.
-4. **Permukaan UI mobile** — sebelumnya `ColorScheme.fromSeed` default, tanpa mode gelap, warna/ukuran tersebar di
-   layar. Sekarang satu tema kelas + widget bersama (lihat §3).
-
-Cacat nomor 2 dan 3 hanya terlihat dari menjalankan aplikasi di perangkat, bukan dari test: itulah alasan R2 mewajibkan
-bukti perilaku, bukan hanya test hijau.
-
----
-
-## 5. Pekerjaan berikutnya (urut prioritas)
-
-Sisa dari audit go-live 2026-09-14. Semua pekerjaan yang bisa dikerjakan di repo sudah selesai
-(§9–§11); yang tersisa butuh pihak ketiga atau akun berbayar.
-
-| # | Pekerjaan | Kenapa | Mulai dari |
-|---|---|---|---|
-| 1 | Push FCM benar-benar terkirim | Wiring server ↔ aplikasi sudah ada dan teruji; butuh proyek Firebase + `google-services.json` lalu `firebase_messaging` | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 5 |
-| 2 | AAB bertanda tangan + listing Play Store | Butuh keystore produksi + akun Google Play | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 1–4 |
-| 3 | Deploy ke VPS/domain | Butuh VPS + DNS + SMTP + bucket S3 | `docs/GO-LIVE-CHECKLIST.md` §1–§3 |
-| 4 | Drill restore bulanan & alert eksternal | Operasional berjalan | `docs/GO-LIVE-CHECKLIST.md` §5 |
-
-Backlog fitur (pasca-MVP, butuh pihak ketiga): payment gateway, WhatsApp Business, printer thermal ESC/POS,
-rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
+- Warna/jarak/radius/durasi hanya dari `src/theme/`; warna status lewat `StatusKind` (domain) → `StatusTones` (tema).
+- Keadaan data wajib lewat `AsyncSection`; keadaan kosong menyebut sebab + langkah berikutnya.
+- Kontras teks ≥ 4.5:1 dijaga `test/theme_test.dart`; tata letak 375×667 + mode gelap dijaga
+  `test/small_screen_layout_test.dart` dan 4 golden di `test/goldens/`.
+- Golden bersifat per-platform/renderer: regenerasi dengan `flutter test --update-goldens test/golden_test.dart`.
+- `dart format` sudah diadopsi (gaya Dart 3.7): jalankan `dart format lib test` **menyeluruh**, jangan per berkas.
 
 ---
 
@@ -147,109 +180,70 @@ rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
 
 | Gejala | Sebab | Solusi |
 |---|---|---|
-| `flutter build apk` gagal menulis `hooks_runner\...\stdout.txt` | Cache native-assets basi setelah proses flutter dibunuh | `rm -rf apps/mobile/.dart_tool/hooks_runner` lalu build ulang |
+| `flutter build apk` gagal menulis `hooks_runner\...\stdout.txt` | cache native-assets basi setelah proses flutter dibunuh | `rm -rf apps/mobile/.dart_tool/hooks_runner` lalu build ulang |
 | `flutter test` error `test`/`expect` isn't defined (ratusan issue) | `.dart_tool` basi setelah ganti SDK | `flutter pub get` lalu ulangi |
-| Web di port lain gagal login (CORS di console) | Origin tidak ada di `CORS_ALLOWED_ORIGINS` | Tambahkan origin di `apps/api/.env`; `.env` dibaca per request, tanpa restart |
-| Tautan reset kata sandi rusak | `FRONTEND_URL` diisi daftar koma | Isi satu origin; daftar hanya di `CORS_ALLOWED_ORIGINS` |
-| `docker compose run` me-recreate pgsql/redis | Perilaku compose untuk service dependen | Data aman di volume `pgdata`; pakai `docker compose exec` untuk query |
-| Daftar di aplikasi kosong tanpa pesan | Exception ditelan `catch (_)` | Cek bentuk JSON vs model; jangan lewatkan `dynamic` ke `whereType(...).map(...).toList()` |
-| `flutter run` ditutup, aplikasi ikut mati | `flutter run` mematikan aplikasi saat keluar | `adb shell am start -n com.laundryos.laundryos_mobile/.MainActivity` (API_BASE sudah ter-bake di APK debug) |
-| `phpstan` gagal `ignore.unmatched` | Entri baseline yang menutupi cacat yang sudah diperbaiki | Hapus entri itu dari `apps/api/phpstan-baseline.neon`; baseline bukan tempat menutup temuan nyata (lihat §9 butir 2) |
-| Skrip `.sh` gagal `bash: /bin/bash: No such file` | `bash` di PATH mesin ini menunjuk WSL yang tidak lengkap | Jalankan dengan `sh <skrip>` (Git Bash) atau `sh -n` untuk cek sintaks |
-| `[ -f /tmp/... ]` bernilai salah walau berkas ada | `/tmp` Git Bash tidak konsisten untuk builtin shell | Pakai path relatif di dalam repo (mis. `./backups/…`) untuk berkas sementara |
-| Backup "sukses" tapi arsip 0 byte | Pipeline `pg_dump` → `gzip` menyembunyikan status `pg_dump` | Sudah diperbaiki di `infra/backup-prod.sh` (dump ke berkas mentah, cek ukuran + `gzip -t`); jangan kembali ke bentuk pipeline |
+| Web di port lain gagal login (CORS di console) | origin tidak ada di `CORS_ALLOWED_ORIGINS` | tambahkan origin di `apps/api/.env`; `.env` dibaca per request (tanpa restart) |
+| Tautan reset kata sandi rusak | `FRONTEND_URL` diisi daftar koma | satu origin di `FRONTEND_URL`; daftar hanya di `CORS_ALLOWED_ORIGINS` |
+| `docker compose run` me-recreate pgsql/redis | perilaku compose untuk service dependen | data aman di volume `pgdata`; pakai `docker compose exec` untuk query |
+| Daftar di aplikasi kosong tanpa pesan | exception ditelan `catch (_)` | cek bentuk JSON vs model; jangan lewatkan `dynamic` ke `whereType(...).map(...).toList()` |
+| `flutter run` ditutup, aplikasi ikut mati | `flutter run` mematikan aplikasi saat keluar | `adb shell am start -n com.laundryos.laundryos_mobile/.MainActivity` (API_BASE sudah ter-*bake*) |
+| `phpstan` gagal `ignore.unmatched` | entri baseline menutupi cacat yang sudah diperbaiki | hapus entri itu dari `apps/api/phpstan-baseline.neon`; baseline bukan tempat menutup temuan nyata |
+| Skrip `.sh` gagal `bash: /bin/bash: No such file` | `bash` di PATH mesin ini menunjuk WSL yang tidak lengkap | jalankan dengan `sh <skrip>`; `sh -n` untuk cek sintaks |
+| `[ -f /tmp/... ]` bernilai salah walau berkas ada | `/tmp` Git Bash tidak konsisten untuk builtin shell | pakai path relatif di dalam repo untuk berkas sementara |
+| Backup "sukses" tapi arsip 0 byte | pipeline `pg_dump` → `gzip` menyembunyikan status `pg_dump` | sudah diperbaiki di `infra/backup-prod.sh`; jangan kembali ke bentuk pipeline |
+| `nginx -t` gagal `host not found in upstream "site"` | config prod menyebut upstream yang tidak ada di luar compose | tambahkan `--add-host api:127.0.0.1 --add-host web:127.0.0.1 --add-host site:127.0.0.1` |
+| Login web produksi "tidak terjadi apa-apa" | `SESSION_SECURE_COOKIE=true` tapi belum ada HTTPS | selesaikan TLS dulu (`DEPLOY.md` §5) |
+| `pnpm install --frozen-lockfile` gagal setelah menambah dependency | `pnpm-lock.yaml` root belum diperbarui | jalankan `pnpm install` di root, commit lockfile-nya |
+| Worker produksi tidak memakai image baru | `worker`/`scheduler` memakai `${API_IMAGE:-…}` | deploy lewat `deploy-prod.sh` supaya semua service ikut tag yang sama |
 
 ---
 
-## 7. Riwayat milestone (M0–M9) dan scope selesai
+## 7. Pekerjaan berikutnya
 
-- **M0** Housekeeping produksi (git baseline, `.gitignore`, root `package.json`, `.dockerignore`).
-- **M1** Koreksi & paritas: role gate `/settings`, error boundary, interceptor 401, pesan error asli, rate limit global, paritas mock↔Laravel, `phpunit.xml` hermetis.
-- **M2** Auth httpOnly cookie Sanctum SPA (stateful→sesi, non-browser→token), CORS credentials, refactor OOP logic layer (`TaskMachine`, `PaymentPolicy`, `ApiClientFactory`).
-- **M3** Backend prod: `Dockerfile.prod` php-fpm+opcache non-root, deep health, index performa, storage disk configurable, TrustProxies, log harian, nginx `api.conf`.
-- **M4** Frontend prod: `output: standalone`, CSP + security headers, robots/sitemap/manifest/icon, `Dockerfile.prod`.
-- **M5** Security: Dependabot, workflow gitleaks/Trivy/audit, `SECURITY.md`, CORS methods eksplisit.
-- **M6** Artifact deploy VPS: compose prod, nginx reverse proxy, certbot, backup + offsite, `DEPLOY.md`, `.env.prod.example`.
-- **M7** QA: unit test logika, E2E security/404, E2E Laravel nyata, k6 load, visual regression, coverage gate.
-- **M8** `apps/site` Astro (landing, harga, 404, SEO, CI).
-- **M9** `apps/mobile` Flutter: M9a platform + DI/OOP + auth aman, M9b fitur per peran, M9c offline baca+tulis + Sentry + signing + device token/push.
+Yang bisa dikerjakan di dalam repo sudah selesai; sisanya butuh pihak ketiga/akun berbayar:
 
-Scope aplikasi selesai: **R0** fondasi (auth, tenant/outlet, RBAC 5 peran) · **R1** inti (customer, katalog, order +
-state machine + tiket + snapshot harga, receipt, audit log, dashboard) · **R2** operasi (pickup/delivery + bukti foto,
-kas + tutup kas, notifikasi + reminder, laporan + CSV) · **R3** SaaS (paket Starter/Growth/Multi-Outlet, limit,
-status gate `past_due`, invite staf) · **R4** web/mobile/site.
+| # | Pekerjaan | Blokirnya | Mulai dari |
+|---|---|---|---|
+| 1 | Push FCM benar-benar terkirim | butuh proyek Firebase + `google-services.json` | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 5 |
+| 2 | AAB bertanda tangan + listing Play Store | butuh keystore produksi + akun Google Play | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 1–4 |
+| 3 | Deploy ke VPS/domain | butuh VPS + DNS + SMTP + bucket S3 | `docs/GO-LIVE-CHECKLIST.md` §1–§3 |
+| 4 | Drill restore bulanan & alert eksternal | operasional berjalan | `docs/GO-LIVE-CHECKLIST.md` §5 |
+
+Backlog fitur (pasca-MVP, butuh vendor): payment gateway, WhatsApp Business, printer thermal ESC/POS,
+rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
 
 ---
 
-## 8. Arsip verifikasi
+## 8. Riwayat
+
+### Milestone
+
+- **M0** housekeeping produksi · **M1** koreksi & paritas · **M2** auth cookie Sanctum SPA + refactor OOP logika ·
+  **M3** backend prod (php-fpm+opcache, deep health, TrustProxies) · **M4** frontend prod (standalone, CSP,
+  robots/sitemap) · **M5** security (Dependabot, gitleaks/Trivy, `SECURITY.md`) · **M6** artifact deploy VPS
+  (compose prod, nginx, certbot, backup + offsite, `DEPLOY.md`) · **M7** QA (unit logika, E2E security/404,
+  E2E Laravel, k6, coverage gate) · **M8** `apps/site` Astro · **M9** `apps/mobile` (platform + DI, fitur per peran,
+  offline, Sentry, signing, device token).
+- Scope aplikasi: **R0** fondasi (auth, tenant/outlet, RBAC 5 peran) · **R1** inti (customer, katalog, order +
+  state machine + tiket + snapshot harga, receipt, audit log, dashboard) · **R2** operasi (pickup/delivery + bukti
+  foto, kas + tutup kas, notifikasi + reminder, laporan + CSV) · **R3** SaaS (paket + limit + gate `past_due`,
+  invite staf) · **R4** web/mobile/site.
+
+### Perbaikan go-live 2026-09-14 (tiga batch)
+
+| Batch | Isi ringkas | Commit | Bukti inti |
+|---|---|---|---|
+| 1 | rate limit tidak bisa dipalsukan (`TRUSTED_PROXIES` + nginx), hash password tidak lagi terserialisasi, backup produksi memverifikasi isi, `APP_KEY` dibuat otomatis untuk klon bersih, unggah bukti mobile mengirim `filename` | `45f7f45` | 14 login XFF berotasi: 14×422 → 10×422 lalu 429; `/api/user` tanpa `password`; backup DB salah → exit 1 tanpa berkas baru; `.env` dihapus → login 200; transport nyata → unggah 200 |
+| 2 | provisi tenant pertama (`tenant:provision`), foto bukti ter-scope tenant + URL bertanda tangan, `/track` aman dari tabrakan tiket lintas tenant | `2539a65` | owner hasil provisi bisa login; GET URL bertanda tangan 200 tanpa auth, tanpa/palsu tanda tangan 403; tiket sama di 2 tenant tidak tertukar, ambigu → 404 |
+| 3 | baca ditutup untuk tenant non-aktif + paket hanya via operator (`tenant:plan`), lifecycle cache/antrean offline ber-identitas, guard rilis mobile, TLS siap-aktif, CI E2E nyata + image prod, `restore.sh`/rollback, deploy `apps/site`, seeder kas+tugas, wiring device token, dokumen rilis store, `dart format`, golden test | `7a355ff` `b525e2d` `5c9ae18` `eb83f97` `75d6eac` `652827d` | rincian per item ada di pesan commit masing-masing dan di `docs/GO-LIVE-CHECKLIST.md` |
+
+### Arsip verifikasi
 
 | Tanggal | Catatan | Hasil inti |
 |---|---|---|
-| 2026-09-14 | Audit go-live + tiga batch perbaikan | lihat §9–§11 (141 test backend · pint 171 file · phpstan 0 · coverage 92,3% · web 51 unit/19+2 E2E · mobile 0 issue/81 test/apk debug) |
-| 2026-09-14 | Integrasi web↔mobile + UI mobile baru | lihat §1 dan §4 |
-| 2026-09-13 | Plan produksi M0–M9 | Backend 121 test · web 51 unit + 18 E2E mock + 2 E2E Laravel · Flutter 25 test · coverage 92,2% |
-| 2026-09-04 | Baseline sebelum plan produksi | Backend 109 test · web 41 unit · `next build` exit 0 · 6 E2E + 6/6 container Up |
+| 2026-09-14 | Audit go-live + tiga batch perbaikan | 141 test backend · pint 171 file · phpstan 0 · coverage 92,3% · web 51 unit + 19/2 E2E · mobile 0 issue + 81 test · apk debug |
+| 2026-09-14 | Integrasi web↔mobile + UI mobile baru | login cookie httpOnly, `/orders` dari PostgreSQL, kurir melihat tugas nyata; cacat CORS, `_TypeError` typed collection, dan locale `id_ID` ditemukan lewat menjalankan aplikasi (bukan test) |
+| 2026-09-13 | Plan produksi M0–M9 | backend 121 test · web 51 unit + 18 E2E mock + 2 E2E Laravel · Flutter 25 test · coverage 92,2% |
+| 2026-09-04 | Baseline sebelum plan produksi | backend 109 test · web 41 unit · `next build` exit 0 · 6 E2E · 6/6 container |
 
 Housekeeping: `.env`, `node_modules`, `vendor`, `skill/`, `infra/backups/` gitignored.
-
----
-
-## 9. Batch perbaikan go-live (2026-09-14)
-
-Audit penuh (backend, web, mobile, infra, keamanan) menemukan 8 blocker; lima yang paling murah dan berdampak
-sudah diperbaiki **dengan bukti perilaku**, bukan hanya test hijau.
-
-| # | Cacat | Perbaikan | Bukti |
-|---|---|---|---|
-| 1 | Rate limit bisa dilewati: `TRUSTED_PROXIES=*` + nginx meneruskan `X-Forwarded-For` klien | `bootstrap/app.php` tidak lagi memakai `*` (kosong = tanpa proxy); nginx menimpa header dengan `$remote_addr`; produksi memakai subnet tetap `172.28.0.0/16` (`docker-compose.prod.yml`) | Sebelum: 14 login dengan XFF berotasi → 14×422 (nol 429). Sesudah: 10×422 lalu 429. Test regresi `AuthTest::test_login_tidak_bisa_melewati_rate_limit_dengan_header_x_forwarded_for` |
-| 2 | `GET /api/user` mengembalikan hash password + `remember_token` (`#[Hidden]` tertulis di `$fillable`, padahal atribut itu `TARGET_CLASS`; tanpa `$hidden`) | `#[Hidden([...])]` dipindah ke kelas `User`; entri baseline phpstan yang menutupi temuan ini dihapus | Sebelum: `password`+`remember_token` ada di respons. Sesudah: tidak ada. Test `UserExposureTest` (login, `/auth/me`, `/api/user`) |
-| 3 | Backup produksi melaporkan sukses untuk arsip kosong (`pg_dump → gzip` menyembunyikan status) | `infra/backup-prod.sh`: `bash` + `set -euo pipefail`, dump ke berkas mentah, cek kosong + header "PostgreSQL database dump", `gzip -t`, `mv` setelah valid, `trap` membersihkan berkas antara | Kasus sukses: 18.993 byte, `gzip -t` utuh, exit 0. Kasus nama DB salah: exit 1, tidak ada berkas baru, tidak ada sisa `.part`/`.raw` |
-| 4 | Klon bersih tidak bisa boot: tidak ada `APP_KEY` (entrypoint tidak membuat, compose tidak menyetel, CI tidak `key:generate`) | `infra/api-entrypoint.sh` menyalin `.env.example` → `.env`, menyinkronkan variabel dev, dan membuat `APP_KEY` saat `vendor/` sudah ada; compose dev menyetel `FRONTEND_URL`/`CORS_ALLOWED_ORIGINS`/`SANCTUM_STATEFUL_DOMAINS`; `prod-entrypoint.sh` gagal cepat bila `APP_KEY` bukan `base64:…`; `phpunit.xml` memakai kunci tetap (test hermetis); CI punya langkah bootstrap | `.env` dihapus → container dijalankan ulang → login `200` (sebelumnya 500 `No application encryption key has been specified`), `.env` terisi `APP_KEY=base64:…` + tiga variabel dev; preflight CORS `:3100` dijawab tanpa `.env` lokal |
-| 5 | Unggah bukti dari mobile selalu gagal: `MultipartFile.fromBytes` tanpa `filename`, jadi PHP membacanya sebagai field biasa | Tipe nilai `UploadFile` (nama + isi) diteruskan lewat `ApiTransport.postMultipart` → `HttpApiTransport` mengirim `filename` | Dengan `filename` hilang: HTTP 422 "Berkas harus berupa gambar." Sesudah perbaikan, skrip sementara memakai `HttpApiTransport` nyata: **HTTP 200** + `proof_url` |
-
-Gate setelah perbaikan: backend 125 test / 428 assertion · `pint --test` PASS 167 file · `phpstan` 0 error ·
-coverage 92,2% · web `tsc`/`eslint` 0 · vitest 51 · `next build` 19 route · E2E mock 19 + Laravel 2 ·
-mobile `analyze` 0 issue, 62 test, `apk --debug` exit 0.
-
-Belum dikerjakan setelah batch pertama (dikerjakan di §10): provisi tenant pertama, scope/disk bukti foto,
-`/track`. Sisanya masih blocker dan rinci di §5.
-
----
-
-## 10. Batch perbaikan go-live kedua (2026-09-14)
-
-Tiga blocker berikutnya: jalur produksi nyata (provisioning, foto bukti, pelacakan publik).
-
-| # | Cacat | Perbaikan | Bukti |
-|---|---|---|---|
-| 6 | Tidak ada jalan membuat tenant pertama di produksi — `DEPLOY.md` §4 menyuruh `tinker` manual | Command `tenant:provision {--name} {--outlet} {--email} {--password} {--plan}` (membuat tenant aktif + outlet + owner, kode outlet 3 huruf unik per tenant, idempoten by email); `DEPLOY.md` §4 memuat perintah yang bisa disalin | Live di stack dev: perintah pertama → `Tenant #2 "Uji Provisi" (starter)` + `Outlet #3 … kode TEB` + `Owner #7`, exit 0; owner hasil provisi bisa login (`role: owner`); dijalankan ulang dengan email sama → exit 1 tanpa baris baru; data uji lalu dibersihkan. Test `ProvisionTenantTest` (5 kasus: sukses, email duplikat, opsi kosong, paket salah, kata sandi pendek) |
-| 7 | Foto bukti tersimpan di prefix datar pada disk `public` dan disajikan tanpa autentikasi | `proof()` menyimpan ke `proofs/{tenant_id}/{outlet_id}`; disk default `local` (privat); `proof_url` menjadi URL bertanda tangan + kedaluwarsa 30 menit ke route baru `GET /delivery-tasks/{task}/proof` (`signed`, throttle 60/menit) yang menyajikan berkas dari disk apa pun | Live: unggah sebagai kurir → `proof_path = proofs/1/1/<hash>.png`, berkas ada di `storage/app/private/…`; `proof_url` = `…/proof?expires=…&signature=…`; GET tanpa auth → **200, 66 byte, image/png**; GET tanpa signature → **403**; signature palsu → **403**. Test: scope path + URL bertanda tangan bisa dibuka, tanpa/ dengan tanda tangan palsu 403, task tanpa berkas 404 |
-| 8 | `/track` mencocokkan satu kandidat `first()` lintas tenant dan membandingkan telepon dengan normalisasi longgar | Semua kandidat ticket diperiksa, pembandingan memakai `hash_equals` setelah normalisasi digit, dan hanya diterima bila **tepat satu** cocok; nomor tanpa digit ditolak lebih awal | Test: tiket sama di dua tenant tidak tertukar (masing-masing telepon menerima total miliknya), tiket ambigu dengan telepon sama → 404, telepon tanpa digit → 404, spasi → 422. Live: ticket+telepon benar 200, telepon salah 404 |
-
-Gate setelah batch kedua: backend **135 test / 463 assertion** · `pint --test` PASS **169 file** ·
-`phpstan` **0 error** (tanpa menambah entri baseline) · coverage **92,5%** · web `tsc`/`eslint` 0 ·
-vitest 51 · `next build` 19 route · E2E mock 19 + Laravel 2 · mobile `analyze` 0 issue + 62 test.
-
----
-
-## 11. Batch perbaikan go-live ketiga (2026-09-14)
-
-Sisa dua belas item audit, dikerjakan paralel per area (API+web, mobile, infra+situs, CI).
-
-| # | Item | Perbaikan | Bukti |
-|---|---|---|---|
-| 1 | Status langganan & naik paket sendiri | Baca **dan** tulis ditutup untuk tenant non-aktif (kecuali auth + `GET /subscription`), respons membawa `code: subscription_inactive`; endpoint `PATCH /subscription` dihapus (route, controller, policy, UI web, mock) dan diganti command operator `tenant:plan {tenant|email} {plan}` yang mencatat ActivityLog | Live: `PATCH` → 405; `past_due`: `/orders`,`/customers`,`/reports/sales.csv`,`/dashboard/summary` → 403 ber-`code`, `/subscription`+`/auth/me` → 200; kembali `active` → 200. `tenant:plan` lewat id & email, idempoten, 2 entri log |
-| 2 | Lifecycle cache/antrean offline mobile | Cache GET dikunci identitas user (`u<id>\|path`); `PendingMutation` menyimpan `userId` dan hanya diputar ulang untuk sesi yang sama; logout mengosongkan cache + antrean (juga saat offline); cold start yang sudah online mem-flush sekali; `catch (_)` yang menelan kegagalan simpan dihapus | `flutter test` 81/81 termasuk 8 test baru (a–d + logout offline + kegagalan simpan tidak dilaporkan aman) |
-| 3 | Guard rilis mobile | `AppConfig.assertReleaseReady()` (https + host non-loopback) dipanggil di `main()`; `build.gradle.kts` gagal saat tugas Release tanpa `key.properties` (+ opsi `-PallowDebugSigning`); izin lokasi dihapus; `allowBackup=false`; README §Rilis | `flutter build apk --release` → BUILD FAILED dengan pesan guard; dengan `-PallowDebugSigning=true --dart-define=API_BASE=https://…` → `app-release.apk`; string guard ada di ketiga ABI `libapp.so` |
-| 4 | TLS produksi | `nginx/tls/laundryos-ssl.conf.example` (443 + HSTS, XFF ditimpa `$remote_addr`), `include …/tls/*.conf`, redirect HTTP→HTTPS yang **tidak** merampas `/.well-known/acme-challenge/`, service `site` di port 80, image certbot + deploy hook reload nginx | `nginx -t` OK (dengan & tanpa direktori tls); redirect diuji: halaman 301, ACME tetap 200; HTTPS self-signed 200 + HSTS; DEPLOY.md §5 jadi 6 langkah salin-tempel |
-| 5 | CI | `web.yml` job `e2e-laravel` (stack Laravel nyata + Playwright), `api.yml` job `images` (4 image produksi + validasi compose prod), `mobile.yml` pin Flutter 3.47.4 | YAML tervalidasi skema; setiap perintah dijalankan lokal; E2E Laravel 2 passed |
-| 6 | Restore & rollback | `restore.sh` diperkuat (gzip + header dump dicek sebelum DB disentuh, `ON_ERROR_STOP` + satu transaksi, wajib `--force`, DB/user dari `ENV_FILE`); image bertag `${API_IMAGE:-…}`; `deploy-prod.sh` = backup → build bertag → up → verifikasi → rollback otomatis | Jalur tolak & jalur sukses dijalankan; DEPLOY.md §7 memuat perintah rollback (`--no-build`) |
-| 7 | Deploy `apps/site` | Service `site` (image nginx + hasil build Astro), host publik di edge nginx, sitemap via `@astrojs/sitemap`, `robots.txt` dinamis dari `PUBLIC_SITE_URL`, CTA tanpa default localhost | `pnpm --filter site build` → 3 halaman + `sitemap-index.xml` + `robots.txt`; routing diuji dengan container + edge nginx (situs 200, 404 benar, dashboard terpisah) |
-| 8 | Seeder demo tugas & kas | Seeder mengisi `delivery_tasks` (assigned/in_progress/done), `cash_entries` (4 pemasukan tertaut order + 3 pengeluaran), `cash_closings` (kemarin, Kemang) | Live: tugas kurir 3 status; ringkasan kas hari ini `income 89500 / expense 0 / balance 89500`, kemarin `closed=true`; entri pada tanggal terkunci → 422. Test `DemoSeederTest` |
-| 9 | Device token / push | `ApiTransport.delete`, `ApiClient.registerDeviceToken`/`deleteDeviceToken`, `PushRegistrar` + `NoopPushRegistrar`, pendaftaran setelah login/bootstrap dan penghapusan sebelum sesi dibuang | `flutter test test/push_registrar_test.dart` 3/3 (POST saat login, DELETE sebelum logout, tanpa token tidak ada panggilan). Pengiriman FCM nyata BLOCKED (tanpa Firebase) |
-| 10 | Kesiapan rilis store | Langkah keystore, penomoran versi, build appbundle, dan checklist Play Console (Data safety: tanpa izin lokasi, `allowBackup=false`) didokumentasikan | `docs/GO-LIVE-CHECKLIST.md` §4; build rilis terbukti gagal tanpa keystore |
-| 11 | Go-live M10 | `docs/GO-LIVE-CHECKLIST.md`: prasyarat pihak ketiga, urutan deploy, 11 bukti verifikasi, operasional pasca-rilis, dan daftar hal yang memang butuh vendor | Dokumen ini; ditautkan dari README + CHECKPOINT §0 |
-| 12 | Adopsi `dart format` | Dijalankan sekali di `lib/` + `test/` (42 berkas diformat), 5 `if` tanpa kurung kurawal yang jadi pelanggaran lint diperbaiki manual | `dart format --set-exit-if-changed` → 0 berkas berubah (stabil); `flutter analyze` 0 issue; `flutter test` 81/81 |
-| 13 | Golden test visual mobile | 4 golden (`StatusChip`+`SectionHeader`+`StatTile`, dan layar dashboard 375×667; terang & gelap) memakai font asli | `flutter test --update-goldens` lalu `flutter test` hijau; README mencatat golden bersifat per-platform |
-
-Gate setelah batch ketiga ada di §1; seluruh gate dijalankan ulang setelah semua perubahan.
