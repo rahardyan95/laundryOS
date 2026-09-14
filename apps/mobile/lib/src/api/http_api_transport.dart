@@ -25,7 +25,9 @@ class HttpApiTransport implements ApiTransport {
       };
 
   Uri _uri(String path, [Map<String, String>? query]) {
-    final base = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final base = baseUrl.endsWith("/")
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
     final uri = Uri.parse("$base$path");
     if (query == null || query.isEmpty) return uri;
     return uri.replace(queryParameters: {...uri.queryParameters, ...query});
@@ -44,12 +46,15 @@ class HttpApiTransport implements ApiTransport {
   }
 
   @override
-  Future<ApiResponse> get(String path, {Map<String, String>? query, String? token}) {
-    return _send(() => _client.get(_uri(path, query), headers: _headers(token)));
+  Future<ApiResponse> get(String path,
+      {Map<String, String>? query, String? token}) {
+    return _send(
+        () => _client.get(_uri(path, query), headers: _headers(token)));
   }
 
   @override
-  Future<ApiResponse> post(String path, {Object? body, String? token, String? idempotencyKey}) {
+  Future<ApiResponse> post(String path,
+      {Object? body, String? token, String? idempotencyKey}) {
     return _send(
       () => _client.post(
         _uri(path),
@@ -60,11 +65,23 @@ class HttpApiTransport implements ApiTransport {
   }
 
   @override
-  Future<ApiResponse> patch(String path, {Object? body, String? token, String? idempotencyKey}) {
+  Future<ApiResponse> patch(String path,
+      {Object? body, String? token, String? idempotencyKey}) {
     return _send(
       () => _client.patch(
         _uri(path),
         headers: _headers(token, idempotencyKey: idempotencyKey),
+        body: body == null ? null : jsonEncode(body),
+      ),
+    );
+  }
+
+  @override
+  Future<ApiResponse> delete(String path, {Object? body, String? token}) {
+    return _send(
+      () => _client.delete(
+        _uri(path),
+        headers: _headers(token),
         body: body == null ? null : jsonEncode(body),
       ),
     );

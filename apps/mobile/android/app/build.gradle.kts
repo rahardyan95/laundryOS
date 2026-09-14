@@ -15,6 +15,21 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Pagar rilis: build Release tanpa keystore berarti artifact ditandatangani
+// kunci debug — tidak boleh naik ke toko. CI/emulator dapat memaksa dengan
+// -PallowDebugSigning=true. Pagar ini hanya menyala saat task Release diminta,
+// sehingga `flutter run` debug tetap jalan di mesin tanpa keystore.
+val releaseRequested =
+    gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+val allowDebugSigning = providers.gradleProperty("allowDebugSigning").orNull == "true"
+if (releaseRequested && !hasReleaseKeystore && !allowDebugSigning) {
+    throw GradleException(
+        "Build Release tanpa android/key.properties. Sediakan keystore rilis " +
+            "(lihat android/key.properties.example) atau jalankan dengan " +
+            "-PallowDebugSigning=true (hanya untuk CI/emulator).",
+    )
+}
+
 android {
     namespace = "com.laundryos.laundryos_mobile"
     compileSdk = flutter.compileSdkVersion

@@ -3,9 +3,13 @@ import "package:sentry_flutter/sentry_flutter.dart";
 
 import "src/app.dart";
 import "src/app_dependencies.dart";
+import "src/config/app_config.dart";
 import "src/domain/format.dart";
 
 Future<void> main() async {
+  // Pagar rilis: build rilis/profil dengan API_BASE kelas dev harus gagal
+  // sekarang, bukan saat pengguna pertama membuka aplikasi.
+  AppConfig.assertReleaseReady();
   WidgetsFlutterBinding.ensureInitialized();
   await Format.initialize();
   final dependencies = AppDependencies();

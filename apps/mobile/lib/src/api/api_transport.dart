@@ -44,6 +44,12 @@ abstract class ApiTransport {
     String? idempotencyKey,
   });
 
+  Future<ApiResponse> delete(
+    String path, {
+    Object? body,
+    String? token,
+  });
+
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields,

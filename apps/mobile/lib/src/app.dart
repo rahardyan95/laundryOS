@@ -20,7 +20,14 @@ class _LaundryOsAppState extends State<LaundryOsApp> {
   @override
   void initState() {
     super.initState();
-    widget.dependencies.authController.bootstrap();
+    _bootstrap();
+  }
+
+  /// Pulihkan sesi lebih dulu, baru sinkronkan: antrean hanya boleh dikirim
+  /// dengan identitas yang sudah diketahui.
+  Future<void> _bootstrap() async {
+    await widget.dependencies.authController.bootstrap();
+    await widget.dependencies.syncController.start();
   }
 
   @override

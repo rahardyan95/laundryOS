@@ -12,7 +12,8 @@ import "support/in_memory_session_store.dart";
 /// letak tidak bergantung pada urutan pemanggilan layar.
 class _RoutingTransport implements ApiTransport {
   @override
-  Future<ApiResponse> get(String path, {Map<String, String>? query, String? token}) async {
+  Future<ApiResponse> get(String path,
+      {Map<String, String>? query, String? token}) async {
     switch (path) {
       case "/auth/me":
         return const ApiResponse(200, {
@@ -69,7 +70,8 @@ class _RoutingTransport implements ApiTransport {
             {
               "id": "n1",
               "title": "Order siap diambil",
-              "body": "Order KMG-20260913-004 sudah selesai disetrika dan siap diambil pelanggan.",
+              "body":
+                  "Order KMG-20260913-004 sudah selesai disetrika dan siap diambil pelanggan.",
               "read_at": null,
               "created_at": "2026-09-14T04:02:23+00:00",
             },
@@ -107,6 +109,11 @@ class _RoutingTransport implements ApiTransport {
       const ApiResponse(200, {});
 
   @override
+  Future<ApiResponse> delete(String path,
+          {Object? body, String? token}) async =>
+      const ApiResponse(200, {});
+
+  @override
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields = const {},
@@ -119,7 +126,8 @@ class _RoutingTransport implements ApiTransport {
   void close() {}
 }
 
-Future<void> _pumpApp(WidgetTester tester, {required Brightness brightness}) async {
+Future<void> _pumpApp(WidgetTester tester,
+    {required Brightness brightness}) async {
   tester.view.physicalSize = const Size(375 * 3, 667 * 3);
   tester.view.devicePixelRatio = 3;
   tester.platformDispatcher.platformBrightnessTestValue = brightness;
@@ -128,7 +136,8 @@ Future<void> _pumpApp(WidgetTester tester, {required Brightness brightness}) asy
 
   final store = InMemorySessionStore();
   await store.saveToken("tok");
-  final dependencies = AppDependencies(transport: _RoutingTransport(), store: store);
+  final dependencies =
+      AppDependencies(transport: _RoutingTransport(), store: store);
 
   await tester.pumpWidget(LaundryOsApp(dependencies: dependencies));
   await tester.pump();
@@ -136,7 +145,8 @@ Future<void> _pumpApp(WidgetTester tester, {required Brightness brightness}) asy
 }
 
 void main() {
-  testWidgets("layar utama tidak meluber di ponsel kecil 375x667 (terang)", (tester) async {
+  testWidgets("layar utama tidak meluber di ponsel kecil 375x667 (terang)",
+      (tester) async {
     await _pumpApp(tester, brightness: Brightness.light);
 
     expect(tester.takeException(), isNull);
@@ -144,7 +154,8 @@ void main() {
     expect(find.textContaining("Rp9.876.543"), findsWidgets);
   });
 
-  testWidgets("layar utama tidak meluber di ponsel kecil 375x667 (gelap)", (tester) async {
+  testWidgets("layar utama tidak meluber di ponsel kecil 375x667 (gelap)",
+      (tester) async {
     await _pumpApp(tester, brightness: Brightness.dark);
 
     expect(tester.takeException(), isNull);
@@ -164,7 +175,8 @@ void main() {
     expect(find.text("Ke Siap Diambil"), findsOneWidget);
   });
 
-  testWidgets("tab Notifikasi menampilkan lencana baru tanpa meluber", (tester) async {
+  testWidgets("tab Notifikasi menampilkan lencana baru tanpa meluber",
+      (tester) async {
     await _pumpApp(tester, brightness: Brightness.light);
 
     await tester.tap(find.text("Notifikasi").last);

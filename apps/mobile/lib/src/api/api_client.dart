@@ -53,6 +53,30 @@ class ApiClient {
     await _transport.post("/auth/logout", token: token);
   }
 
+  /// Mendaftarkan token perangkat (FCM) milik sesi ini. Server melakukan
+  /// `updateOrCreate` per token, jadi memanggil ulang aman.
+  Future<void> registerDeviceToken(
+    String token,
+    String deviceToken, {
+    String platform = "android",
+  }) async {
+    _ensure(await _transport.post(
+      "/auth/device-token",
+      body: {"token": deviceToken, "platform": platform},
+      token: token,
+    ));
+  }
+
+  /// Menghapus token perangkat. Server hanya butuh token perangkatnya; ia
+  /// mencari baris milik pengguna yang sedang masuk.
+  Future<void> deleteDeviceToken(String token, String deviceToken) async {
+    _ensure(await _transport.delete(
+      "/auth/device-token",
+      body: {"token": deviceToken},
+      token: token,
+    ));
+  }
+
   // --- Orders ---
 
   Future<OrderPage> listOrders(
