@@ -27,6 +27,8 @@ kali jalan — tidak ada langkah manual.
 
 Akun demo (semua password `password`): `owner@` · `manager@` · `kasir@` · `operator@` · `kurir@laundryos.test`.
 Mailpit `:8025` · pelacakan pelanggan tanpa login: `http://localhost:3000/lacak`.
+Untuk rilis ke pelanggan: [`docs/GO-LIVE-CHECKLIST.md`](GO-LIVE-CHECKLIST.md) (prasyarat pihak ketiga,
+urutan deploy, bukti verifikasi, rilis mobile).
 
 ### Peta repo
 
@@ -47,17 +49,17 @@ Dijalankan dari root, kecuali disebut lain. Hasil terakhir 2026-09-14 (stack Doc
 
 | Gate | Perintah | Hasil |
 |---|---|---|
-| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **135 passed, 463 assertions** |
-| Backend gaya | `… php vendor/bin/pint --test` | **PASS, 169 files** |
+| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **141 passed, 484 assertions** |
+| Backend gaya | `… php vendor/bin/pint --test` | **PASS, 171 files** |
 | Backend analisis | `… composer analyse` (Larastan L5) | 0 error (baseline ada) |
-| Coverage | `… composer test:coverage` | 92,5% (gate 90) |
+| Coverage | `… composer test:coverage` | 92,3% (gate 90) |
 | Web tipe/lint | `pnpm --filter web exec tsc --noEmit` · `pnpm --filter web exec eslint src` | 0 · 0 |
 | Web unit | `pnpm --filter web exec vitest run` | **51 passed** |
 | Web build | `pnpm --filter web build` | exit 0, 19 route |
 | Web E2E mock | `pnpm --filter web test:e2e` | **19 passed** |
 | Web E2E API nyata | `pnpm --filter web test:e2e:laravel` | **2 passed** |
 | Mobile analisis | `cd apps/mobile && flutter analyze` | **0 issue** |
-| Mobile test | `flutter test` | **62 passed** |
+| Mobile test | `flutter test` | **81 passed** (termasuk 4 golden) |
 | Mobile build | `flutter build apk --debug` | exit 0 |
 | Mobile di perangkat | `flutter run -d emulator-5554 --dart-define=API_BASE=…` | render + data API nyata |
 | Site | `pnpm --filter site build` | 3 halaman |
@@ -126,23 +128,15 @@ bukti perilaku, bukan hanya test hijau.
 
 ## 5. Pekerjaan berikutnya (urut prioritas)
 
-Sisa dari audit go-live 2026-09-14 (yang sudah dikerjakan ada di §9).
+Sisa dari audit go-live 2026-09-14. Semua pekerjaan yang bisa dikerjakan di repo sudah selesai
+(§9–§11); yang tersisa butuh pihak ketiga atau akun berbayar.
 
 | # | Pekerjaan | Kenapa | Mulai dari |
 |---|---|---|---|
-| 1 | Tegakkan status langganan pada operasi baca + larang naik paket sendiri | `EnsureSubscriptionActive` hanya menahan tulis dan mengecualikan `api/v1/auth/*`; `PATCH /subscription` menulis `PlanTier` langsung | `EnsureSubscriptionActive`, `SubscriptionController` |
-| 2 | Mobile offline: identitas pada cache + pembersihan saat logout | Cache GET tidak memuat identitas user dan tidak dibersihkan; antrean tulis di-flush memakai token siapa pun yang sedang login | `caching_api_transport.dart`, `session_store.dart`, `sync_controller.dart` |
-| 3 | Rilis mobile: guard `API_BASE` + signing rilis + manifest | `apk --release` sukses tanpa keystore (debug signing — terbukti `CN=Android Debug`) dan default `API_BASE` menunjuk loopback emulator; izin lokasi tak terpakai, `allowBackup` belum diset | `app_config.dart`, `android/app/build.gradle.kts`, `AndroidManifest.xml` |
-| 4 | TLS produksi + cookie aman | nginx produksi masih HTTP-only sementara `SESSION_SECURE_COOKIE=true` → login web gagal sampai 443 aktif | `infra/nginx/laundryos.conf`, `infra/DEPLOY.md` |
-| 5 | CI: job E2E API nyata + build image produksi + pin Flutter | E2E Laravel hanya ada di mesin developer, jadi dua bug integrasi terakhir tidak bisa tertangkap CI | `.github/workflows/{api,web,mobile}.yml` |
-| 6 | `restore.sh` + jalur rollback | Masker kegagalan yang sama seperti backup (tanpa `ON_ERROR_STOP`, user/DB hardcoded); tidak ada image berversi atau backup pra-migrasi | `infra/restore.sh`, `infra/docker-compose.prod.yml` |
-| 7 | Deploy `apps/site` | Tidak ada service compose/blok nginx untuk situs; `robots.txt` menjanjikan sitemap yang tidak digenerate | `infra/docker-compose.prod.yml`, `apps/site/astro.config.mjs` |
-| 8 | Seeder demo: `delivery_tasks`, `cash_entries`, `cash_closings` | Instalasi bersih membuat tab Tugas (kurir) dan Kas kosong, jadi peran itu tidak bisa dinilai | `apps/api/database/seeders/DatabaseSeeder.php` |
-| 9 | FCM native mobile | Backend sudah siap (`/auth/device-token`, `PushNotifier`); mobile belum memanggilnya dan belum punya `firebase_messaging` | `apps/mobile/pubspec.yaml`, `apps/mobile/app_dependencies.dart` |
-| 10 | Rilis Play/App Store | Butuh akun + signing produksi | `apps/mobile/README.md` §Belum |
-| 11 | Go-live M10 | Butuh VPS/domain | `infra/DEPLOY.md` |
-| 12 | Adopsi `dart format` sekali saja | Menjalankan `dart format` sekarang menulis ulang seluruh `lib/`+`test/` (gaya baru Dart 3.7), jadi jangan dijalankan setengah jalan | commit terpisah, tanpa perubahan logika |
-| 13 | Golden test visual mobile | Kontras dan tata letak sudah diuji teks; regresi piksel belum dijaga | `apps/mobile/test/` (`matchesGoldenFile`) |
+| 1 | Push FCM benar-benar terkirim | Wiring server ↔ aplikasi sudah ada dan teruji; butuh proyek Firebase + `google-services.json` lalu `firebase_messaging` | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 5 |
+| 2 | AAB bertanda tangan + listing Play Store | Butuh keystore produksi + akun Google Play | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 1–4 |
+| 3 | Deploy ke VPS/domain | Butuh VPS + DNS + SMTP + bucket S3 | `docs/GO-LIVE-CHECKLIST.md` §1–§3 |
+| 4 | Drill restore bulanan & alert eksternal | Operasional berjalan | `docs/GO-LIVE-CHECKLIST.md` §5 |
 
 Backlog fitur (pasca-MVP, butuh pihak ketiga): payment gateway, WhatsApp Business, printer thermal ESC/POS,
 rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
@@ -191,7 +185,7 @@ status gate `past_due`, invite staf) · **R4** web/mobile/site.
 
 | Tanggal | Catatan | Hasil inti |
 |---|---|---|
-| 2026-09-14 | Audit go-live + dua batch perbaikan | lihat §9 dan §10 (135 test backend · pint 169 file · phpstan 0 · coverage 92,5% · web 51 unit/19+2 E2E · mobile 0 issue/62 test/apk debug) |
+| 2026-09-14 | Audit go-live + tiga batch perbaikan | lihat §9–§11 (141 test backend · pint 171 file · phpstan 0 · coverage 92,3% · web 51 unit/19+2 E2E · mobile 0 issue/81 test/apk debug) |
 | 2026-09-14 | Integrasi web↔mobile + UI mobile baru | lihat §1 dan §4 |
 | 2026-09-13 | Plan produksi M0–M9 | Backend 121 test · web 51 unit + 18 E2E mock + 2 E2E Laravel · Flutter 25 test · coverage 92,2% |
 | 2026-09-04 | Baseline sebelum plan produksi | Backend 109 test · web 41 unit · `next build` exit 0 · 6 E2E + 6/6 container Up |
@@ -235,3 +229,27 @@ Tiga blocker berikutnya: jalur produksi nyata (provisioning, foto bukti, pelacak
 Gate setelah batch kedua: backend **135 test / 463 assertion** · `pint --test` PASS **169 file** ·
 `phpstan` **0 error** (tanpa menambah entri baseline) · coverage **92,5%** · web `tsc`/`eslint` 0 ·
 vitest 51 · `next build` 19 route · E2E mock 19 + Laravel 2 · mobile `analyze` 0 issue + 62 test.
+
+---
+
+## 11. Batch perbaikan go-live ketiga (2026-09-14)
+
+Sisa dua belas item audit, dikerjakan paralel per area (API+web, mobile, infra+situs, CI).
+
+| # | Item | Perbaikan | Bukti |
+|---|---|---|---|
+| 1 | Status langganan & naik paket sendiri | Baca **dan** tulis ditutup untuk tenant non-aktif (kecuali auth + `GET /subscription`), respons membawa `code: subscription_inactive`; endpoint `PATCH /subscription` dihapus (route, controller, policy, UI web, mock) dan diganti command operator `tenant:plan {tenant|email} {plan}` yang mencatat ActivityLog | Live: `PATCH` → 405; `past_due`: `/orders`,`/customers`,`/reports/sales.csv`,`/dashboard/summary` → 403 ber-`code`, `/subscription`+`/auth/me` → 200; kembali `active` → 200. `tenant:plan` lewat id & email, idempoten, 2 entri log |
+| 2 | Lifecycle cache/antrean offline mobile | Cache GET dikunci identitas user (`u<id>\|path`); `PendingMutation` menyimpan `userId` dan hanya diputar ulang untuk sesi yang sama; logout mengosongkan cache + antrean (juga saat offline); cold start yang sudah online mem-flush sekali; `catch (_)` yang menelan kegagalan simpan dihapus | `flutter test` 81/81 termasuk 8 test baru (a–d + logout offline + kegagalan simpan tidak dilaporkan aman) |
+| 3 | Guard rilis mobile | `AppConfig.assertReleaseReady()` (https + host non-loopback) dipanggil di `main()`; `build.gradle.kts` gagal saat tugas Release tanpa `key.properties` (+ opsi `-PallowDebugSigning`); izin lokasi dihapus; `allowBackup=false`; README §Rilis | `flutter build apk --release` → BUILD FAILED dengan pesan guard; dengan `-PallowDebugSigning=true --dart-define=API_BASE=https://…` → `app-release.apk`; string guard ada di ketiga ABI `libapp.so` |
+| 4 | TLS produksi | `nginx/tls/laundryos-ssl.conf.example` (443 + HSTS, XFF ditimpa `$remote_addr`), `include …/tls/*.conf`, redirect HTTP→HTTPS yang **tidak** merampas `/.well-known/acme-challenge/`, service `site` di port 80, image certbot + deploy hook reload nginx | `nginx -t` OK (dengan & tanpa direktori tls); redirect diuji: halaman 301, ACME tetap 200; HTTPS self-signed 200 + HSTS; DEPLOY.md §5 jadi 6 langkah salin-tempel |
+| 5 | CI | `web.yml` job `e2e-laravel` (stack Laravel nyata + Playwright), `api.yml` job `images` (4 image produksi + validasi compose prod), `mobile.yml` pin Flutter 3.47.4 | YAML tervalidasi skema; setiap perintah dijalankan lokal; E2E Laravel 2 passed |
+| 6 | Restore & rollback | `restore.sh` diperkuat (gzip + header dump dicek sebelum DB disentuh, `ON_ERROR_STOP` + satu transaksi, wajib `--force`, DB/user dari `ENV_FILE`); image bertag `${API_IMAGE:-…}`; `deploy-prod.sh` = backup → build bertag → up → verifikasi → rollback otomatis | Jalur tolak & jalur sukses dijalankan; DEPLOY.md §7 memuat perintah rollback (`--no-build`) |
+| 7 | Deploy `apps/site` | Service `site` (image nginx + hasil build Astro), host publik di edge nginx, sitemap via `@astrojs/sitemap`, `robots.txt` dinamis dari `PUBLIC_SITE_URL`, CTA tanpa default localhost | `pnpm --filter site build` → 3 halaman + `sitemap-index.xml` + `robots.txt`; routing diuji dengan container + edge nginx (situs 200, 404 benar, dashboard terpisah) |
+| 8 | Seeder demo tugas & kas | Seeder mengisi `delivery_tasks` (assigned/in_progress/done), `cash_entries` (4 pemasukan tertaut order + 3 pengeluaran), `cash_closings` (kemarin, Kemang) | Live: tugas kurir 3 status; ringkasan kas hari ini `income 89500 / expense 0 / balance 89500`, kemarin `closed=true`; entri pada tanggal terkunci → 422. Test `DemoSeederTest` |
+| 9 | Device token / push | `ApiTransport.delete`, `ApiClient.registerDeviceToken`/`deleteDeviceToken`, `PushRegistrar` + `NoopPushRegistrar`, pendaftaran setelah login/bootstrap dan penghapusan sebelum sesi dibuang | `flutter test test/push_registrar_test.dart` 3/3 (POST saat login, DELETE sebelum logout, tanpa token tidak ada panggilan). Pengiriman FCM nyata BLOCKED (tanpa Firebase) |
+| 10 | Kesiapan rilis store | Langkah keystore, penomoran versi, build appbundle, dan checklist Play Console (Data safety: tanpa izin lokasi, `allowBackup=false`) didokumentasikan | `docs/GO-LIVE-CHECKLIST.md` §4; build rilis terbukti gagal tanpa keystore |
+| 11 | Go-live M10 | `docs/GO-LIVE-CHECKLIST.md`: prasyarat pihak ketiga, urutan deploy, 11 bukti verifikasi, operasional pasca-rilis, dan daftar hal yang memang butuh vendor | Dokumen ini; ditautkan dari README + CHECKPOINT §0 |
+| 12 | Adopsi `dart format` | Dijalankan sekali di `lib/` + `test/` (42 berkas diformat), 5 `if` tanpa kurung kurawal yang jadi pelanggaran lint diperbaiki manual | `dart format --set-exit-if-changed` → 0 berkas berubah (stabil); `flutter analyze` 0 issue; `flutter test` 81/81 |
+| 13 | Golden test visual mobile | 4 golden (`StatusChip`+`SectionHeader`+`StatTile`, dan layar dashboard 375×667; terang & gelap) memakai font asli | `flutter test --update-goldens` lalu `flutter test` hijau; README mencatat golden bersifat per-platform |
+
+Gate setelah batch ketiga ada di §1; seluruh gate dijalankan ulang setelah semua perubahan.

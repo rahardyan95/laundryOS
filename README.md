@@ -32,6 +32,7 @@ Web: http://localhost:3000 · API: http://localhost:8000/api/v1/health · Demo: 
 
 - `docs/CARA-MENJALANKAN.md` — setup, workflow harian, troubleshooting
 - `docs/CHECKPOINT.md` — status verifikasi terkini
+- `docs/GO-LIVE-CHECKLIST.md` — checklist rilis: prasyarat pihak ketiga, urutan deploy, bukti verifikasi, rilis mobile
 - `docs/BRD_LaundryOS_MVP.docx` — kebutuhan bisnis
 - `docs/PRD_LaundryOS_MVP.docx` — produk, persona, release plan
 - `docs/FRD_LaundryOS_MVP.docx` — requirement fungsional + QA cases
