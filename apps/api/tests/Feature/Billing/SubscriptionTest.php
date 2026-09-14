@@ -44,14 +44,22 @@ class SubscriptionTest extends TestCase
             ->assertJsonStructure(['data' => ['plan', 'plan_label', 'status', 'limits', 'usage']]);
     }
 
-    public function test_owner_bisa_ganti_paket_dan_tercatat(): void
+    public function test_owner_tidak_bisa_ganti_paket_sendiri(): void
     {
         Sanctum::actingAs($this->owner);
 
-        $this->patchJson('/api/v1/subscription', ['plan' => 'growth'])
-            ->assertOk()
-            ->assertJsonPath('data.plan', 'growth');
+        // Perubahan paket jalur operator; endpoint self-service dihapus.
+        $this->patchJson('/api/v1/subscription', ['plan' => 'growth'])->assertStatus(405);
 
+        $this->assertSame('starter', $this->tenant->refresh()->plan->value);
+    }
+
+    public function test_command_tenant_plan_mengubah_paket_dan_tercatat(): void
+    {
+        $this->artisan('tenant:plan', ['tenant' => (string) $this->tenant->id, 'plan' => 'growth'])
+            ->assertExitCode(0);
+
+        $this->assertSame('growth', $this->tenant->refresh()->plan->value);
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
             'actor_id' => $this->owner->id,
@@ -59,11 +67,21 @@ class SubscriptionTest extends TestCase
         ]);
     }
 
-    public function test_kasir_tidak_boleh_ganti_paket(): void
+    public function test_command_tenant_plan_menerima_email_owner(): void
     {
-        Sanctum::actingAs(User::factory()->forTenant($this->tenant)->withRole(Role::Cashier)->create());
+        $this->artisan('tenant:plan', ['tenant' => $this->owner->email, 'plan' => 'multi_outlet'])
+            ->assertExitCode(0);
 
-        $this->patchJson('/api/v1/subscription', ['plan' => 'growth'])->assertForbidden();
+        $this->assertSame('multi_outlet', $this->tenant->refresh()->plan->value);
+    }
+
+    public function test_command_tenant_plan_menolak_tenant_atau_paket_tidak_dikenal(): void
+    {
+        $this->artisan('tenant:plan', ['tenant' => '999', 'plan' => 'growth'])->assertExitCode(1);
+        $this->artisan('tenant:plan', ['tenant' => (string) $this->tenant->id, 'plan' => 'enterprise'])
+            ->assertExitCode(1);
+
+        $this->assertSame('starter', $this->tenant->refresh()->plan->value);
     }
 
     public function test_outlet_melebihi_limit_ditolak(): void
@@ -146,15 +164,30 @@ class SubscriptionTest extends TestCase
         ])->assertStatus(422)->assertJsonPath('message', 'Batas order bulanan paket Starter tercapai.');
     }
 
-    public function test_status_past_due_memblokir_tulis_tapi_baca_oke(): void
+    public function test_status_past_due_memblokir_baca_dan_tulis(): void
     {
         $this->tenant->update(['status' => 'past_due']);
         $cashier = User::factory()->forTenant($this->tenant)->withRole(Role::Cashier)->create();
         Sanctum::actingAs($cashier);
 
-        $this->getJson('/api/v1/orders')->assertOk();
+        // Semua data bisnis ditutup, bukan hanya mutasi.
+        $this->getJson('/api/v1/orders')
+            ->assertForbidden()
+            ->assertJsonPath('code', 'subscription_inactive');
+        $this->getJson('/api/v1/reports/sales.csv')->assertForbidden();
         $this->postJson('/api/v1/orders', [])->assertForbidden();
+    }
 
+    public function test_status_past_due_tetap_boleh_logout_dan_lihat_langganan(): void
+    {
+        $this->tenant->update(['status' => 'past_due']);
+        Sanctum::actingAs($this->owner);
+
+        // Pemilik harus bisa melihat status langganannya, dan siapa pun bisa keluar.
+        $this->getJson('/api/v1/subscription')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'past_due');
+        $this->getJson('/api/v1/auth/me')->assertOk();
         $this->postJson('/api/v1/auth/logout')->assertOk();
     }
 }

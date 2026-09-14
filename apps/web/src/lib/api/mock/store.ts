@@ -745,7 +745,7 @@ export class InMemoryStore {
     return lines.join("\n");
   }
 
-  private mockPlan: "starter" | "growth" | "multi_outlet" = "growth";
+  private readonly mockPlan: "starter" | "growth" | "multi_outlet" = "growth";
 
   private static readonly PLAN_LIMITS = {
     starter: { label: "Starter", outlets: 1, users: 3, orders_per_month: 500 },
@@ -767,11 +767,6 @@ export class InMemoryStore {
         orders_this_month: this.orderList.filter((o) => o.createdAt.slice(0, 7) === month).length,
       },
     };
-  }
-
-  updateSubscription(plan: "starter" | "growth" | "multi_outlet"): Subscription {
-    this.mockPlan = plan;
-    return this.subscription();
   }
 
   createOutlet(input: CreateOutletInput): Outlet {

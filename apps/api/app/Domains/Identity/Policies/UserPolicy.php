@@ -21,9 +21,4 @@ class UserPolicy
     {
         return in_array($user->role, [Role::Owner, Role::Manager], true);
     }
-
-    public function manageSubscription(User $user): bool
-    {
-        return $user->role === Role::Owner;
-    }
 }

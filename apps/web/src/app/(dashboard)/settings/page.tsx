@@ -31,12 +31,6 @@ import type { Outlet, Role, Subscription, User } from "@/lib/api/types";
 import { NavPolicy } from "@/lib/nav-policy";
 import { SessionManager } from "@/lib/api/session";
 
-const plans = [
-  { value: "starter", label: "Starter" },
-  { value: "growth", label: "Growth" },
-  { value: "multi_outlet", label: "Multi-Outlet" },
-];
-
 const roles: { value: Role; label: string }[] = [
   { value: "manager", label: "Manajer" },
   { value: "cashier", label: "Kasir" },
@@ -100,17 +94,6 @@ export default function SettingsPage() {
     const cleanup = reload();
     return cleanup;
   }, [reload]);
-
-  async function handlePlanChange(plan: string) {
-    setError("");
-    try {
-      const updated = await api.updateSubscription(plan);
-      setSubscription(updated);
-      toast.success(`Paket berubah ke ${updated.planLabel}.`);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Gagal mengubah paket.");
-    }
-  }
 
   async function handleCreateOutlet() {
     if (!outletCode.trim() || !outletName.trim()) {
@@ -204,27 +187,8 @@ export default function SettingsPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Status: {subscription.status} · Penagihan manual oleh admin.
+                Status: {subscription.status} · Perubahan paket dilakukan admin (penagihan manual).
               </p>
-              {isOwner ? (
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="plan" className="text-sm">
-                    Ubah paket
-                  </Label>
-                  <Select value={subscription.plan} onValueChange={handlePlanChange}>
-                    <SelectTrigger id="plan" className="w-44">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {plans.map((plan) => (
-                        <SelectItem key={plan.value} value={plan.value}>
-                          {plan.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : null}
             </CardContent>
           </Card>
 

@@ -205,14 +205,6 @@ export class MockApiClient extends ApiClient {
     return this.store.subscription();
   }
 
-  async updateSubscription(plan: string): Promise<Subscription> {
-    await this.networkDelay(150, 300);
-    if (plan !== "starter" && plan !== "growth" && plan !== "multi_outlet") {
-      throw new ApiError(422, "Paket tidak valid.");
-    }
-    return this.store.updateSubscription(plan);
-  }
-
   async createOutlet(input: CreateOutletInput): Promise<Outlet> {
     await this.networkDelay(200, 400);
     return this.store.createOutlet(input);
