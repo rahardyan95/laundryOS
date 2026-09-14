@@ -20,21 +20,38 @@ class TrackController extends Controller
             'phone.required' => 'Nomor telepon wajib diisi.',
         ]);
 
+        $phone = self::digits($data['phone']);
+
+        // Nomor tanpa digit (mis. "---") tidak boleh cocok dengan pelanggan mana pun,
+        // termasuk yang nomornya kosong di data.
+        if (strlen($phone) < 8) {
+            abort(404);
+        }
+
         // Lookup publik tanpa auth: tenant tidak diketahui dari user,
         // sehingga global scope dilepas dan otorisasi diganti pasangan ticket+telepon.
         // Relasi customer ikut dilepas karena TenantScope fail-closed untuk guest.
-        $order = Order::withoutGlobalScope(TenantScope::class)
+        // Nomor ticket hanya unik per tenant (kode outlet bisa sama antar tenant),
+        // jadi semua kandidat diperiksa dan hanya diterima bila tepat satu cocok.
+        $candidates = Order::withoutGlobalScope(TenantScope::class)
             ->with([
                 'items',
                 'customer' => fn ($query) => $query->withoutGlobalScope(TenantScope::class),
                 'history',
             ])
             ->where('ticket', $data['ticket'])
-            ->first();
+            ->limit(5)
+            ->get();
 
-        if (! $order || self::digits($order->customer->phone) !== self::digits($data['phone'])) {
+        $matches = $candidates->filter(
+            fn (Order $order): bool => hash_equals(self::digits($order->customer->phone), $phone)
+        );
+
+        if ($matches->count() !== 1) {
             abort(404);
         }
+
+        $order = $matches->first();
 
         return response()->json(['data' => [
             'ticket' => $order->ticket,

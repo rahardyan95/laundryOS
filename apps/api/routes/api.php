@@ -39,6 +39,12 @@ Route::prefix('v1')->group(function (): void {
     Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
     Route::post('/track', [TrackController::class, 'show'])->middleware('throttle:10,1');
 
+    // Penyaji foto bukti: publik tapi wajib bertanda tangan (dibuat oleh
+    // DeliveryTaskResource) dan kedaluwarsa, karena dipakai langsung oleh <img>.
+    Route::get('/delivery-tasks/{delivery_task}/proof', [DeliveryTaskController::class, 'showProof'])
+        ->middleware(['signed', 'throttle:60,1'])
+        ->name('delivery-tasks.proof');
+
     Route::middleware(['auth:sanctum', EnsureSubscriptionActive::class, EnsureIdempotency::class])->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);

@@ -37,11 +37,21 @@ Service `api` menjalankan migrasi otomatis lewat entrypoint (`RUN_MIGRATIONS=1`)
 
 ## 4. Akun admin pertama
 
-Seed demo tidak dipakai di produksi. Buat tenant + owner lewat tinker:
+Seed demo tidak dipakai di produksi. Buat tenant + outlet pertama + owner dengan perintah
+`tenant:provision` (idempoten: email yang sudah terdaftar ditolak tanpa mengubah apa pun):
 
 ```bash
-docker compose --env-file .env.prod -f docker-compose.prod.yml exec api php artisan tinker
+docker compose --env-file .env.prod -f docker-compose.prod.yml exec api \
+  php artisan tenant:provision \
+    --name="Laundry Contoh" \
+    --outlet="Kemang" \
+    --email=owner@laundryos.example \
+    --password='<kata-sandi-kuat-min-8-karakter>' \
+    --plan=growth
 ```
+
+Opsi `--plan`: `starter`, `growth`, `multi_outlet`. Kode outlet diambil dari 3 huruf pertama
+nama outlet (dipakai pada nomor ticket) dan otomatis dibedakan bila sudah terpakai di tenant yang sama.
 
 ## 5. TLS (Let's Encrypt / certbot)
 

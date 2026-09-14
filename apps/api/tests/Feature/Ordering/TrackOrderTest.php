@@ -90,6 +90,85 @@ class TrackOrderTest extends TestCase
         $this->postJson('/api/v1/track', [])->assertStatus(422);
     }
 
+    public function test_telepon_tanpa_digit_tidak_pernah_cocok(): void
+    {
+        foreach (['---', '()'] as $phone) {
+            $this->postJson('/api/v1/track', [
+                'ticket' => $this->ticket,
+                'phone' => $phone,
+            ])->assertNotFound();
+        }
+
+        // Spasi saja dianggap kosong oleh validasi, bukan percobaan menebak.
+        $this->postJson('/api/v1/track', [
+            'ticket' => $this->ticket,
+            'phone' => '   ',
+        ])->assertStatus(422);
+    }
+
+    public function test_tiket_sama_di_tenant_lain_tidak_tertukar(): void
+    {
+        $otherTenant = Tenant::factory()->create();
+        $otherOutlet = Outlet::factory()->forTenant($otherTenant)->create();
+        $otherCustomer = Customer::factory()->forTenant($otherTenant)->forOutlet($otherOutlet)->create([
+            'phone' => '089900001111',
+        ]);
+        $otherService = Service::factory()->forTenant($otherTenant)->create(['price_per_unit' => 5000]);
+        $otherActor = User::factory()->forTenant($otherTenant)->forOutlet($otherOutlet)->withRole(Role::Cashier)->create();
+
+        $otherOrder = app(CreateOrder::class)->handle($otherActor, [
+            'outlet_id' => $otherOutlet->id,
+            'customer_id' => $otherCustomer->id,
+            'items' => [['service_id' => $otherService->id, 'qty' => 1]],
+            'payment_method' => 'cash',
+            'paid_amount' => 0,
+        ]);
+
+        // Nomor ticket hanya unik per tenant: paksa keduanya sama.
+        $otherOrder->forceFill(['ticket' => $this->ticket])->save();
+
+        $this->postJson('/api/v1/track', [
+            'ticket' => $this->ticket,
+            'phone' => $this->phone,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.total', 20000);
+
+        $this->postJson('/api/v1/track', [
+            'ticket' => $this->ticket,
+            'phone' => '089900001111',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.total', 5000);
+    }
+
+    public function test_tiket_ambigu_dengan_telepon_sama_ditolak(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $outlet = Outlet::factory()->forTenant($tenant)->create();
+        $customer = Customer::factory()->forTenant($tenant)->forOutlet($outlet)->create([
+            'phone' => $this->phone,
+        ]);
+        $service = Service::factory()->forTenant($tenant)->create(['price_per_unit' => 7000]);
+        $actor = User::factory()->forTenant($tenant)->forOutlet($outlet)->withRole(Role::Cashier)->create();
+
+        $duplicate = app(CreateOrder::class)->handle($actor, [
+            'outlet_id' => $outlet->id,
+            'customer_id' => $customer->id,
+            'items' => [['service_id' => $service->id, 'qty' => 1]],
+            'payment_method' => 'cash',
+            'paid_amount' => 0,
+        ]);
+        $duplicate->forceFill(['ticket' => $this->ticket])->save();
+
+        // Dua pesanan berbeda dengan ticket dan telepon sama: tidak ada jawaban
+        // yang aman, jadi 404 lebih baik daripada menebak salah satu.
+        $this->postJson('/api/v1/track', [
+            'ticket' => $this->ticket,
+            'phone' => $this->phone,
+        ])->assertNotFound();
+    }
+
     public function test_track_dibatasi_rate_limit(): void
     {
         for ($i = 0; $i < 10; $i++) {
