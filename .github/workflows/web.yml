@@ -4,10 +4,17 @@ on:
   push:
     paths:
       - "apps/web/**"
+      # Job `e2e-laravel` menembak API + Postgres nyata, jadi perubahan
+      # backend/infra ikut memicu workflow ini. Tanpa jalur ini suite Laravel
+      # hanya ada di mesin developer.
+      - "apps/api/**"
+      - "infra/**"
       - ".github/workflows/web.yml"
   pull_request:
     paths:
       - "apps/web/**"
+      - "apps/api/**"
+      - "infra/**"
       - ".github/workflows/web.yml"
 
 jobs:
@@ -46,3 +53,79 @@ jobs:
 
       - name: E2E tests
         run: pnpm --filter web exec playwright test
+
+  # E2E terhadap Laravel + Postgres nyata (suite `e2e-laravel`), bukan mock.
+  # Suite mock di job `test` memakai data in-memory sehingga regresi kontrak
+  # web<->api tidak tertangkap; job ini yang menangkapnya.
+  e2e-laravel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build API image
+        working-directory: infra
+        run: docker compose build api
+
+      - name: Start database + cache
+        working-directory: infra
+        run: docker compose up -d --wait pgsql redis
+
+      # Klon bersih belum punya apps/api/vendor (diabaikan git), jadi install
+      # dulu: tanpa vendor, entrypoint container `api` langsung keluar (fatal:
+      # vendor/autoload.php tidak ada).
+      - name: Install API dependencies
+        working-directory: infra
+        run: docker compose run --rm -T api composer install --no-interaction
+
+      # Migrasi dijalankan SEBELUM server hidup. Entrypoint container menulis
+      # ulang apps/api/.env dengan `sed -i` (buat berkas sementara lalu rename),
+      # dan `php artisan serve` memantau mtime `.env` untuk auto-reload: bila
+      # kedua hal ini bertumbukan, serve mati dengan
+      # `ErrorException: filemtime(): stat failed for /var/www/.env`
+      # (ServeCommand.php:159) dan container keluar. Urutan ini menghilangkan
+      # jendela balapan tersebut; APP_KEY juga sudah dibuat entrypoint karena
+      # vendor/ sudah ada.
+      - name: Migrate + seed
+        working-directory: infra
+        run: docker compose run --rm -T api php artisan migrate:fresh --seed
+
+      # `.env` belum ada di klon bersih: entrypoint container menyalin
+      # .env.example dan membuat APP_KEY, sedangkan compose dev sudah menyuntik
+      # SANCTUM_STATEFUL_DOMAINS/CORS_ALLOWED_ORIGINS untuk localhost:3100
+      # (prasyarat login SPA di playwright.laravel.config.ts).
+      - name: Boot API stack
+        working-directory: infra
+        run: docker compose up -d --wait --wait-timeout 300
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/api/v1/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API tidak siap setelah 60 detik" >&2
+          docker compose -f infra/docker-compose.yml logs api >&2
+          exit 1
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      # Skrip ini menyalakan `pnpm dev --port 3100` sendiri (webServer di
+      # playwright.laravel.config.ts) dengan NEXT_PUBLIC_API_MODE=laravel.
+      - name: E2E against real API
+        run: pnpm --filter web exec playwright test -c playwright.laravel.config.ts
