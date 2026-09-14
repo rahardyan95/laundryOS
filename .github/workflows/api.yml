@@ -5,11 +5,36 @@ on:
     paths:
       - "apps/api/**"
       - "infra/**"
+      # Input build image produksi (job `images`). Berkas di luar apps/api yang
+      # ikut menentukan hasil image: Dockerfile, lockfile, konfigurasi build.
+      # Tanpa entri ini, image produksi bisa rusak tanpa ketahuan sampai deploy.
+      - "apps/web/Dockerfile.prod"
+      - "apps/web/next.config.ts"
+      - "apps/web/package.json"
+      - "apps/web/pnpm-lock.yaml"
+      - "apps/web/pnpm-workspace.yaml"
+      - "apps/site/Dockerfile.prod"
+      - "apps/site/astro.config.mjs"
+      - "apps/site/nginx.conf"
+      - "apps/site/package.json"
+      - "apps/site/pnpm-lock.yaml"
+      - "apps/site/pnpm-workspace.yaml"
       - ".github/workflows/api.yml"
   pull_request:
     paths:
       - "apps/api/**"
       - "infra/**"
+      - "apps/web/Dockerfile.prod"
+      - "apps/web/next.config.ts"
+      - "apps/web/package.json"
+      - "apps/web/pnpm-lock.yaml"
+      - "apps/web/pnpm-workspace.yaml"
+      - "apps/site/Dockerfile.prod"
+      - "apps/site/astro.config.mjs"
+      - "apps/site/nginx.conf"
+      - "apps/site/package.json"
+      - "apps/site/pnpm-lock.yaml"
+      - "apps/site/pnpm-workspace.yaml"
       - ".github/workflows/api.yml"
 
 jobs:
@@ -47,3 +72,52 @@ jobs:
 
       - name: Coverage gate
         run: docker compose run --rm -T api php artisan test --coverage --min=90
+
+  # Jalur produksi: seluruh image produksi benar-benar dibangun + compose prod
+  # divalidasi. Regresi Dockerfile (COPY ke berkas yang tidak di-commit, lockfile
+  # tidak sinkron, ARG build hilang) dan env wajib yang hilang sebelumnya hanya
+  # ketahuan saat deploy ke VPS.
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API production image
+        run: docker build -t laundryos-api:ci -f apps/api/Dockerfile.prod apps/api
+
+      - name: Build web production image
+        run: docker build -t laundryos-web:ci -f apps/web/Dockerfile.prod apps/web
+
+      # Situs pemasaran: URL dikompilasi masuk ke HTML, dan Dockerfile menolak
+      # build bila keduanya kosong (jadi dummy tetap wajib di sini).
+      - name: Build site production image
+        run: |
+          docker build -f apps/site/Dockerfile.prod \
+            --build-arg PUBLIC_SITE_URL=https://ci.example \
+            --build-arg PUBLIC_APP_URL=https://ci.example \
+            -t laundryos-site:ci apps/site --pull
+
+      # Image certbot produksi (certbot + docker CLI untuk hook reload nginx).
+      - name: Build certbot image
+        run: docker build -t laundryos-certbot:ci infra/certbot
+
+      # `env_file: [.env.prod]` wajib ada — compose menolak env_file yang tidak
+      # ditemukan (isinya tidak dipakai untuk interpolasi). `--env-file .env.prod`
+      # adalah bentuk kanonik produksi (infra/DEPLOY.md §3), jadi variabel wajib
+      # yang baru ditambahkan ke compose ikut terambil dari templat prod.
+      # Variabel wajib `${VAR:?…}` saat ini: DB_DATABASE, DB_USERNAME,
+      # DB_PASSWORD, REDIS_PASSWORD, PUBLIC_SITE_URL, PUBLIC_APP_URL,
+      # PUBLIC_API_URL — diisi dummy karena CI tidak punya rahasia produksi.
+      - name: Validate production compose
+        working-directory: infra
+        env:
+          DB_DATABASE: laundry
+          DB_USERNAME: laundry
+          DB_PASSWORD: ci-dummy-password
+          REDIS_PASSWORD: ci-dummy-redis-password
+          PUBLIC_SITE_URL: https://ci.example
+          PUBLIC_APP_URL: https://ci.example
+          PUBLIC_API_URL: https://ci.example/api/v1
+        run: |
+          cp .env.prod.example .env.prod
+          docker compose --env-file .env.prod -f docker-compose.prod.yml config --quiet
