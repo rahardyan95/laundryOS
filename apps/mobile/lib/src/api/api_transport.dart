@@ -1,3 +1,5 @@
+import "upload_file.dart";
+
 class ApiResponse {
   const ApiResponse(this.statusCode, this.body);
 
@@ -45,7 +47,7 @@ abstract class ApiTransport {
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields,
-    Map<String, List<int>> files,
+    Map<String, UploadFile> files,
     String? token,
   });
 

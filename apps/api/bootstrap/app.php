@@ -16,7 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->throttleApi();
-        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
+        // Daftar proxy yang boleh dipercaya. Kosong = tidak ada proxy (dev: api
+        // diakses langsung), produksi: subnet nginx (mis. 172.28.0.0/16). Jangan
+        // pakai "*": itu mempercayai setiap pengirim, sehingga klien bisa memalsukan
+        // X-Forwarded-For dan melewati rate limit login/track.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES') ?: null);
         $middleware->redirectGuestsTo(
             fn (Request $request) => $request->is('api/*') ? null : '/'
         );

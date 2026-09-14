@@ -22,7 +22,7 @@ class NetworkException implements Exception {
 
 /// Mutasi disimpan lokal saat offline dan akan dikirim ulang saat online.
 class QueuedOfflineException implements Exception {
-  QueuedOfflineException([this.message = "Offline — perubahan disimpan dan akan disinkronkan."]);
+  QueuedOfflineException([this.message = "Offline, perubahan disimpan dan akan disinkronkan."]);
 
   final String message;
 

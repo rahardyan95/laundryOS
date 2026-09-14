@@ -3,6 +3,7 @@ import "dart:math";
 import "api_exception.dart";
 import "api_transport.dart";
 import "mutation_queue.dart";
+import "upload_file.dart";
 
 /// Dekorator transport: mutasi yang gagal karena jaringan disimpan di antrean
 /// dan dikirim ulang (dengan `Idempotency-Key` sama) saat online.
@@ -64,7 +65,7 @@ class OfflineApiTransport implements ApiTransport {
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields = const {},
-    Map<String, List<int>> files = const {},
+    Map<String, UploadFile> files = const {},
     String? token,
   }) =>
       // Berkas biner tidak diantre; unggah ulang perlu online.

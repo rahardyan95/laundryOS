@@ -1,11 +1,23 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
+import "../domain/format.dart";
 import "../models/catalog.dart";
 import "../state/auth_controller.dart";
 import "../state/catalog_controller.dart";
 import "../state/order_controller.dart";
+import "../theme/app_metrics.dart";
+import "../theme/app_typography.dart";
+import "../widgets/app_scaffold.dart";
+import "../widgets/async_section.dart";
+import "../widgets/empty_state.dart";
+import "../widgets/error_notice.dart";
+import "../widgets/section_header.dart";
+import "../widgets/surface_card.dart";
 
+/// Formulir satu order. Urutannya mengikuti percakapan di depan meja:
+/// siapa pelanggannya, layanan apa, berapa banyak, lalu bayarnya berapa.
+/// Total muncul sebagai satu kartu sendiri supaya jadi fokus sebelum menyimpan.
 class NewOrderScreen extends StatefulWidget {
   const NewOrderScreen({super.key});
 
@@ -93,7 +105,8 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
         );
     if (!mounted) return;
     if (created == null) {
-      final message = context.read<OrderController>().error ?? "Gagal menyimpan order.";
+      final message =
+          context.read<OrderController>().error ?? "Gagal menyimpan order.";
       setState(() {
         _saving = false;
         _error = message;
@@ -107,85 +120,145 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   Widget build(BuildContext context) {
     final catalog = context.watch<CatalogController>();
     final total = _total(catalog);
+    final catalogEmpty = catalog.customers.isEmpty || catalog.services.isEmpty;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text("Order Baru")),
-      body: catalog.loading && catalog.services.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+    return AppScaffold(
+      title: "Order Baru",
+      showLogout: false,
+      body: ListView(
+        padding: AppSpacing.screen,
+        children: [
+          AsyncSection(
+            isLoading: catalog.loading,
+            isEmpty: catalogEmpty,
+            errorMessage: catalog.error,
+            onRetry: () => context.read<CatalogController>().load(),
+            empty: const EmptyState(
+              icon: Icons.people_outline,
+              message: "Pelanggan atau layanan belum ada",
+              hint:
+                  "Tambahkan pelanggan dan layanan dari dashboard web, lalu tekan muat ulang.",
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SectionHeader(
+                    title: "Pelanggan",
+                    caption: "Siapa yang menyerahkan cucian"),
                 DropdownButtonFormField<String>(
                   initialValue: _customerId,
-                  decoration: const InputDecoration(labelText: "Pelanggan"),
+                  isExpanded: true,
+                  decoration:
+                      const InputDecoration(labelText: "Nama pelanggan"),
                   items: catalog.customers
-                      .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                      .map((c) =>
+                          DropdownMenuItem(value: c.id, child: Text(c.name)))
                       .toList(),
                   onChanged: (value) => setState(() => _customerId = value),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.xl),
+                const SectionHeader(
+                    title: "Layanan", caption: "Jenis cucian dan jumlahnya"),
                 DropdownButtonFormField<String>(
                   initialValue: _serviceId,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: "Layanan"),
                   items: catalog.services
-                      .map((s) => DropdownMenuItem(value: s.id, child: Text("${s.name} (${s.unit})")))
+                      .map(
+                        (s) => DropdownMenuItem(
+                          value: s.id,
+                          child: Text(
+                              "${s.name} · ${Format.rupiah(s.pricePerUnit)}/${s.unit}"),
+                        ),
+                      )
                       .toList(),
                   onChanged: (value) => setState(() => _serviceId = value),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _qty,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: const InputDecoration(labelText: "Jumlah"),
                         onChanged: (_) => setState(() {}),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: TextField(
                         controller: _paid,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: "Dibayar (Rp)"),
+                        decoration:
+                            const InputDecoration(labelText: "Dibayar (Rp)"),
+                        onChanged: (_) => setState(() {}),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.xl),
+                const SectionHeader(
+                    title: "Pembayaran", caption: "Metode dan catatan"),
                 DropdownButtonFormField<String>(
                   initialValue: _paymentMethod,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: "Metode bayar"),
                   items: const [
                     DropdownMenuItem(value: "cash", child: Text("Tunai")),
-                    DropdownMenuItem(value: "transfer", child: Text("Transfer")),
+                    DropdownMenuItem(
+                        value: "transfer", child: Text("Transfer")),
                     DropdownMenuItem(value: "qris", child: Text("QRIS")),
                   ],
-                  onChanged: (value) => setState(() => _paymentMethod = value ?? "cash"),
+                  onChanged: (value) =>
+                      setState(() => _paymentMethod = value ?? "cash"),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: _note,
-                  decoration: const InputDecoration(labelText: "Catatan (opsional)"),
+                  decoration:
+                      const InputDecoration(labelText: "Catatan (opsional)"),
                   maxLines: 2,
                 ),
-                const SizedBox(height: 16),
-                Text("Total: Rp$total", style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: AppSpacing.xl),
+                SurfaceCard(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text("Total",
+                            style: Theme.of(context).textTheme.titleMedium),
+                      ),
+                      Text(
+                        Format.rupiah(total),
+                        style: AppTypography.amount(
+                          context,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (_error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  const SizedBox(height: AppSpacing.md),
+                  ErrorNotice(message: _error!),
                 ],
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.xl),
                 FilledButton(
                   onPressed: _saving ? null : _submit,
                   child: _saving
                       ? const SizedBox(
-                          height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text("Simpan Order"),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -41,6 +41,9 @@ services:
       RUN_MIGRATIONS: "1"
       DB_HOST: pgsql
       REDIS_HOST: redis
+      # Subnet network `backend` (lihat blok networks di bawah) — satu-satunya
+      # pengirim yang X-Forwarded-For-nya boleh dipercaya.
+      TRUSTED_PROXIES: "172.28.0.0/16"
     depends_on:
       pgsql:
         condition: service_healthy
@@ -125,6 +128,10 @@ services:
 
 networks:
   backend:
+    ipam:
+      config:
+        # Subnet tetap supaya TRUSTED_PROXIES bisa menyebutnya dengan pasti.
+        - subnet: 172.28.0.0/16
 
 volumes:
   pgdata:

@@ -3,13 +3,15 @@ import "package:provider/provider.dart";
 
 import "../models/role.dart";
 import "../state/auth_controller.dart";
-import "../state/connectivity_controller.dart";
-import "../state/sync_controller.dart";
+import "../widgets/connectivity_banner.dart";
 import "dashboard_screen.dart";
 import "notifications_screen.dart";
 import "orders_screen.dart";
 import "tasks_screen.dart";
 
+/// Kerangka sesi: pita status sinkronisasi di atas, isi di tengah, navigasi
+/// bawah. Tujuan navigasi ditentukan peran, karena kurir dan kasir tidak
+/// memakai pekerjaan yang sama.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -28,28 +30,10 @@ class _HomeShellState extends State<HomeShell> {
     final tabs = _tabsFor(role);
     final index = _index.clamp(0, tabs.length - 1);
 
-    final offline = context.select<ConnectivityController, bool>(
-      (connectivity) => !connectivity.isOnline,
-    );
-    final sync = context.watch<SyncController>();
-    final banner = _bannerText(offline, sync);
-
     return Scaffold(
       body: Column(
         children: [
-          if (banner != null)
-            Material(
-              color: offline
-                  ? Theme.of(context).colorScheme.errorContainer
-                  : Theme.of(context).colorScheme.secondaryContainer,
-              child: SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                  child: Text(banner, textAlign: TextAlign.center),
-                ),
-              ),
-            ),
+          const ConnectivityBanner(),
           Expanded(
             child: IndexedStack(
               index: index,
@@ -58,25 +42,30 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: tabs
-            .map((tab) => NavigationDestination(icon: Icon(tab.icon), label: tab.label))
-            .toList(),
+      bottomNavigationBar: DecoratedBox(
+        // Garis atas tipis sebagai pemisah dari isi: nol elevasi, jadi isi
+        // tidak pernah tertutup bayangan navigasi.
+        decoration: BoxDecoration(
+          border: Border(
+            top:
+                BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: index,
+          onDestinationSelected: (value) => setState(() => _index = value),
+          destinations: tabs
+              .map(
+                (tab) => NavigationDestination(
+                  icon: Icon(tab.icon),
+                  label: tab.label,
+                  tooltip: tab.label,
+                ),
+              )
+              .toList(),
+        ),
       ),
     );
-  }
-
-  String? _bannerText(bool offline, SyncController sync) {
-    if (offline) {
-      return sync.pending > 0
-          ? "Mode offline — ${sync.pending} perubahan menunggu sinkron."
-          : "Mode offline — menampilkan data terakhir.";
-    }
-    if (sync.syncing) return "Menyinkronkan perubahan…";
-    if (sync.pending > 0) return "${sync.pending} perubahan menunggu sinkron.";
-    return null;
   }
 
   List<_Tab> _tabsFor(Role role) {

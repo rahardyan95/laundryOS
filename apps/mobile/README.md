@@ -25,23 +25,31 @@ saat request tanpa `Origin` (lihat `apps/api/API.md`).
 
 ```
 lib/
-├── main.dart               # bootstrap + AppDependencies
+├── main.dart               # bootstrap + Format.initialize + AppDependencies
 └── src/
-    ├── app.dart            # MaterialApp + AuthGate + providers
+    ├── app.dart            # MaterialApp (AppTheme light/dark) + AuthGate + providers
     ├── app_dependencies.dart
     ├── api/                # ApiTransport (interface), HttpApiTransport, ApiClient
     ├── config/             # AppConfig (API_BASE via dart-define)
-    ├── domain/             # OrderMachine, TaskMachine, Format
+    ├── domain/             # Dart murni: OrderMachine, TaskMachine, StatusKind, Format
     ├── models/             # Order, OrderStatus, DeliveryTask, Customer, Service, dst.
     ├── repositories/       # Auth, Order, DeliveryTask, Catalog, Notification, Dashboard
     ├── state/              # Auth/Order/DeliveryTask/Catalog/Notification/Dashboard controllers
-    ├── widgets/            # LogoutButton
+    ├── theme/              # AppPalette, AppSpacing/AppRadii/AppMotion, AppTypography, AppStatusTones, AppTheme
+    ├── widgets/            # AppScaffold, AsyncSection, EmptyState, ErrorNotice, StatusChip, SurfaceCard,
+    │                       # StatTile, SectionHeader, ConnectivityBanner, BrandMark, LogoutButton
     └── screens/            # login, home_shell, dashboard, orders, new_order, tasks, notifications
 ```
 
 Arsitektur mengikuti R1 (OOP): transport & session store di balik interface, repository
 per domain, controller sebagai state, widget hanya UI. Dependency dikomposisikan di
 `AppDependencies` sehingga dapat diuji dengan fake.
+
+Sistem visual (palet, tipografi, jarak, warna status) tinggal di `lib/src/theme/` dan
+diuraikan di `AGENTS.md` R3. Layar tidak menulis warna atau jarak sendiri.
+
+Font: Plus Jakarta Sans (variable, `assets/fonts/PlusJakartaSans-Variable.ttf`, lisensi OFL 1.1)
+dipakai bersama web; berat huruf dipilih lewat `fontWeight`.
 
 ## Fitur per peran (bottom nav)
 
@@ -56,9 +64,13 @@ per domain, controller sebagai state, widget hanya UI. Dependency dikomposisikan
 
 ```bash
 flutter analyze     # 0 issue
-flutter test        # 22 test (unit + widget, fake transport & cache)
+flutter test        # 62 test: unit domain, controller, widget, kontras tema, tata letak 375x667
 flutter build apk --debug   # build/app/outputs/flutter-apk/app-debug.apk
 ```
+
+Uji yang menjaga sistem visual: `test/theme_test.dart` (rasio kontras ≥ 4.5:1 di kedua mode,
+tipografi, sasaran sentuh 48dp, warna `StatusChip`) dan `test/small_screen_layout_test.dart`
+(layar utama tidak meluber pada 375x667, terang dan gelap).
 
 ## Offline & observability
 

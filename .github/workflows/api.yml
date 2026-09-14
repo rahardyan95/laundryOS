@@ -30,6 +30,12 @@ jobs:
       - name: Install dependencies
         run: docker compose run --rm -T api composer install --no-interaction --prefer-dist
 
+      # Klon bersih belum punya apps/api/.env (diabaikan git); entrypoint container
+      # menyalin .env.example dan membuat APP_KEY. Tanpa langkah ini test login SPA
+      # gagal dengan MissingAppKeyException.
+      - name: Bootstrap .env + APP_KEY
+        run: docker compose run --rm -T api php artisan --version
+
       - name: Code style
         run: docker compose run --rm -T api php vendor/bin/pint --test
 

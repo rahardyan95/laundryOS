@@ -18,6 +18,10 @@
         </include>
     </source>
     <php>
+        <!-- Kunci tetap: test harus hermetis, tidak bergantung pada .env mesin. -->
+        <server name="APP_KEY" value="base64:TzI0idXOTbjK6lSM5rmF/tk3v08n1+8+hkmO6lPKQvA="/>
+        <!-- Tidak ada proxy di test: X-Forwarded-For kiriman klien harus diabaikan. -->
+        <server name="TRUSTED_PROXIES" value=""/>
         <server name="APP_ENV" value="testing"/>
         <server name="APP_MAINTENANCE_DRIVER" value="file"/>
         <server name="BCRYPT_ROUNDS" value="4"/>

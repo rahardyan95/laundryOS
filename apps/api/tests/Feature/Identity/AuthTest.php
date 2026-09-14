@@ -127,4 +127,28 @@ class AuthTest extends TestCase
             'device_name' => 'web',
         ])->assertStatus(429);
     }
+
+    public function test_login_tidak_bisa_melewati_rate_limit_dengan_header_x_forwarded_for(): void
+    {
+        $tenant = Tenant::factory()->create();
+        User::factory()->forTenant($tenant)->create(['email' => 'owner@laundryos.test']);
+
+        // Tanpa TRUSTED_PROXIES, header kiriman klien tidak boleh mengubah
+        // identitas pemanggil — kalau berubah, setiap percobaan dapat jatah baru.
+        for ($i = 0; $i < 10; $i++) {
+            $this->withHeader('X-Forwarded-For', "203.0.113.{$i}")
+                ->postJson('/api/v1/auth/login', [
+                    'email' => 'owner@laundryos.test',
+                    'password' => 'salah',
+                    'device_name' => 'web',
+                ])->assertStatus(422);
+        }
+
+        $this->withHeader('X-Forwarded-For', '203.0.113.99')
+            ->postJson('/api/v1/auth/login', [
+                'email' => 'owner@laundryos.test',
+                'password' => 'salah',
+                'device_name' => 'web',
+            ])->assertStatus(429);
+    }
 }

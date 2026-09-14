@@ -4,6 +4,7 @@ import "package:http/http.dart" as http;
 
 import "api_exception.dart";
 import "api_transport.dart";
+import "upload_file.dart";
 
 class HttpApiTransport implements ApiTransport {
   HttpApiTransport({
@@ -73,7 +74,7 @@ class HttpApiTransport implements ApiTransport {
   Future<ApiResponse> postMultipart(
     String path, {
     Map<String, String> fields = const {},
-    Map<String, List<int>> files = const {},
+    Map<String, UploadFile> files = const {},
     String? token,
   }) {
     return _send(() async {
@@ -84,7 +85,14 @@ class HttpApiTransport implements ApiTransport {
       });
       request.fields.addAll(fields);
       for (final entry in files.entries) {
-        request.files.add(http.MultipartFile.fromBytes(entry.key, entry.value));
+        // filename wajib: tanpa itu PHP membaca part ini sebagai field biasa.
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            entry.key,
+            entry.value.bytes,
+            filename: entry.value.filename,
+          ),
+        );
       }
       final streamed = await _client.send(request);
       return http.Response.fromStream(streamed);

@@ -1,9 +1,11 @@
 import "../models/delivery_task.dart";
+import "status_kind.dart";
 
 class TaskMachine {
   const TaskMachine._();
 
-  static DeliveryTaskStatus? next(DeliveryTaskStatus status) => switch (status) {
+  static DeliveryTaskStatus? next(DeliveryTaskStatus status) =>
+      switch (status) {
         DeliveryTaskStatus.pending => DeliveryTaskStatus.assigned,
         DeliveryTaskStatus.assigned => DeliveryTaskStatus.inProgress,
         DeliveryTaskStatus.inProgress => DeliveryTaskStatus.done,
@@ -27,4 +29,13 @@ class TaskMachine {
 
   static String typeLabel(DeliveryTaskType type) =>
       type == DeliveryTaskType.pickup ? "Pickup" : "Delivery";
+
+  /// Arti visual status tugas untuk lencana.
+  static StatusKind kind(DeliveryTaskStatus status) => switch (status) {
+        DeliveryTaskStatus.pending => StatusKind.neutral,
+        DeliveryTaskStatus.assigned => StatusKind.info,
+        DeliveryTaskStatus.inProgress => StatusKind.warning,
+        DeliveryTaskStatus.done => StatusKind.positive,
+        DeliveryTaskStatus.cancelled => StatusKind.negative,
+      };
 }
