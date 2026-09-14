@@ -7,6 +7,7 @@ import "api/offline_api_transport.dart";
 import "api/offline_cache.dart";
 import "api/session_store.dart";
 import "config/app_config.dart";
+import "push/push_registrar.dart";
 import "repositories/auth_repository.dart";
 import "repositories/catalog_repository.dart";
 import "repositories/dashboard_repository.dart";
@@ -30,15 +31,24 @@ class AppDependencies {
     SessionStore? store,
     OfflineCache? offlineCache,
     MutationQueue? mutationQueue,
+    PushRegistrar? pushRegistrar,
   })  : store = store ?? SecureSessionStore(),
         offlineCache = offlineCache ?? SharedPrefsOfflineCache(),
         mutationQueue = mutationQueue ?? SharedPrefsMutationQueue(),
-        _innerTransport = transport ??
-            CachingApiTransport(
-              HttpApiTransport(baseUrl: AppConfig.apiBaseUrl),
-              offlineCache ?? SharedPrefsOfflineCache(),
-            ) {
-    offlineTransport = OfflineApiTransport(_innerTransport, this.mutationQueue, this.store.token);
+        pushRegistrar = pushRegistrar ?? const NoopPushRegistrar() {
+    // Identitas = id pengguna yang tersimpan. Cache dan antrean memakainya
+    // supaya tidak ada data yang bocor antar shift di perangkat yang sama.
+    final identity = this.store.userId;
+
+    final inner = transport ??
+        CachingApiTransport(
+          HttpApiTransport(baseUrl: AppConfig.apiBaseUrl),
+          this.offlineCache,
+          identity,
+        );
+
+    offlineTransport = OfflineApiTransport(
+        inner, this.mutationQueue, this.store.token, identity);
     this.transport = offlineTransport;
 
     api = ApiClient(offlineTransport);
@@ -52,7 +62,12 @@ class AppDependencies {
     notificationRepository = NotificationRepository(api, token);
     dashboardRepository = DashboardRepository(api, token);
 
-    authController = AuthController(authRepository);
+    authController = AuthController(
+      authRepository,
+      offlineCache: this.offlineCache,
+      mutationQueue: this.mutationQueue,
+      pushRegistrar: this.pushRegistrar,
+    );
     orderController = OrderController(orderRepository);
     deliveryTaskController = DeliveryTaskController(deliveryTaskRepository);
     catalogController = CatalogController(catalogRepository);
@@ -62,10 +77,10 @@ class AppDependencies {
     syncController = SyncController(offlineTransport, connectivityController);
   }
 
-  final ApiTransport _innerTransport;
   final SessionStore store;
   final OfflineCache offlineCache;
   final MutationQueue mutationQueue;
+  final PushRegistrar pushRegistrar;
 
   late final OfflineApiTransport offlineTransport;
   late final ApiTransport transport;

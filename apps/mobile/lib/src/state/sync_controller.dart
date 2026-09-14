@@ -29,6 +29,16 @@ class SyncController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Dipanggil sekali setelah sesi dipulihkan. Bila memang sudah online,
+  /// antrean dikirim sekarang: `ConnectivityController` mulai dari keadaan
+  /// "online", jadi tidak ada transisi yang bisa diandalkan untuk memicunya.
+  Future<void> start() async {
+    await _refreshPending();
+    if (_connectivity.isOnline) {
+      await flush();
+    }
+  }
+
   void _onConnectivity() {
     if (_connectivity.isOnline) {
       flush();
