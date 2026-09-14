@@ -3,6 +3,7 @@
 namespace App\Domains\Operations\Http\Controllers;
 
 use App\Domains\Identity\Enums\Role;
+use App\Domains\Identity\Scopes\TenantScope;
 use App\Domains\Operations\Actions\InvalidTaskTransitionException;
 use App\Domains\Operations\Enums\DeliveryTaskStatus;
 use App\Domains\Operations\Http\Requests\StoreDeliveryTaskRequest;
@@ -17,6 +18,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class DeliveryTaskController extends Controller
 {
@@ -103,9 +106,30 @@ class DeliveryTaskController extends Controller
             'proof.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        $deliveryTask->proof_path = $request->file('proof')->store('proofs', config('filesystems.proof_disk'));
+        $deliveryTask->proof_path = $request->file('proof')->store(
+            "proofs/{$deliveryTask->tenant_id}/{$deliveryTask->outlet_id}",
+            config('filesystems.proof_disk'),
+        );
         $deliveryTask->save();
 
         return new DeliveryTaskResource($deliveryTask->load(['order', 'driver']));
+    }
+
+    /**
+     * Menyajikan foto bukti lewat URL bertanda tangan: pemanggil tidak login
+     * (gambar dipakai langsung oleh tag <img>), jadi tanda tangan + masa berlaku
+     * dari `DeliveryTaskResource` yang menjadi otorisasinya, bukan sesi.
+     */
+    public function showProof(Request $request): Response
+    {
+        $task = DeliveryTask::withoutGlobalScope(TenantScope::class)
+            ->whereKey($request->route('delivery_task'))
+            ->firstOrFail();
+
+        $disk = Storage::disk(config('filesystems.proof_disk'));
+
+        abort_unless($task->proof_path !== null && $disk->exists($task->proof_path), 404);
+
+        return $disk->response($task->proof_path);
     }
 }

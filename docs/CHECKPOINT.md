@@ -47,10 +47,10 @@ Dijalankan dari root, kecuali disebut lain. Hasil terakhir 2026-09-14 (stack Doc
 
 | Gate | Perintah | Hasil |
 |---|---|---|
-| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **125 passed, 428 assertions** |
-| Backend gaya | `… php vendor/bin/pint --test` | **PASS, 167 files** |
+| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **135 passed, 463 assertions** |
+| Backend gaya | `… php vendor/bin/pint --test` | **PASS, 169 files** |
 | Backend analisis | `… composer analyse` (Larastan L5) | 0 error (baseline ada) |
-| Coverage | `… composer test:coverage` | 92,2% (gate 90) |
+| Coverage | `… composer test:coverage` | 92,5% (gate 90) |
 | Web tipe/lint | `pnpm --filter web exec tsc --noEmit` · `pnpm --filter web exec eslint src` | 0 · 0 |
 | Web unit | `pnpm --filter web exec vitest run` | **51 passed** |
 | Web build | `pnpm --filter web build` | exit 0, 19 route |
@@ -130,22 +130,19 @@ Sisa dari audit go-live 2026-09-14 (yang sudah dikerjakan ada di §9).
 
 | # | Pekerjaan | Kenapa | Mulai dari |
 |---|---|---|---|
-| 1 | Perintah provisi tenant pertama + DEPLOY.md | Tanpa ini instalasi produksi tidak punya owner; `DEPLOY.md` §4 hanya menyuruh tinker | `apps/api/app/Console/Commands/`, `infra/DEPLOY.md` §4 |
-| 2 | Bukti foto: path ber-scope tenant, disk privat/URL bertanda tangan | `store('proofs', …)` datar; disk default `public` dan `prod-entrypoint` menjalankan `storage:link`, jadi `proof_url` bisa dibaca tanpa auth | `DeliveryTaskController@proof`, `DeliveryTaskResource`, `config/filesystems.php` |
-| 3 | `/track`: entropi tiket + pencarian ber-scope | Tiket `{kode outlet}-{Ymd}-{seq}` (±999/hari) dengan telepon sebagai satu-satunya sekret; kode outlet bisa sama antar tenant dan query memakai `first()` tanpa scope | `TicketNumberGenerator`, `TrackController` |
-| 4 | Tegakkan status langganan pada operasi baca + larang naik paket sendiri | `EnsureSubscriptionActive` hanya menahan tulis dan mengecualikan `api/v1/auth/*`; `PATCH /subscription` menulis `PlanTier` langsung | `EnsureSubscriptionActive`, `SubscriptionController` |
-| 5 | Mobile offline: identitas pada cache + pembersihan saat logout | Cache GET tidak memuat identitas user dan tidak dibersihkan; antrean tulis di-flush memakai token siapa pun yang sedang login | `caching_api_transport.dart`, `session_store.dart`, `sync_controller.dart` |
-| 6 | Rilis mobile: guard `API_BASE` + signing rilis + manifest | `apk --release` sukses tanpa keystore (debug signing — terbukti `CN=Android Debug`) dan default `API_BASE` menunjuk loopback emulator; izin lokasi tak terpakai, `allowBackup` belum diset | `app_config.dart`, `android/app/build.gradle.kts`, `AndroidManifest.xml` |
-| 7 | TLS produksi + cookie aman | nginx produksi masih HTTP-only sementara `SESSION_SECURE_COOKIE=true` → login web gagal sampai 443 aktif | `infra/nginx/laundryos.conf`, `infra/DEPLOY.md` |
-| 8 | CI: job E2E API nyata + build image produksi + pin Flutter | E2E Laravel hanya ada di mesin developer, jadi dua bug integrasi terakhir tidak bisa tertangkap CI | `.github/workflows/{api,web,mobile}.yml` |
-| 9 | `restore.sh` + jalur rollback | Masker kegagalan yang sama seperti backup (tanpa `ON_ERROR_STOP`, user/DB hardcoded); tidak ada image berversi atau backup pra-migrasi | `infra/restore.sh`, `infra/docker-compose.prod.yml` |
-| 10 | Deploy `apps/site` | Tidak ada service compose/blok nginx untuk situs; `robots.txt` menjanjikan sitemap yang tidak digenerate | `infra/docker-compose.prod.yml`, `apps/site/astro.config.mjs` |
-| 11 | Seeder demo: `delivery_tasks`, `cash_entries`, `cash_closings` | Instalasi bersih membuat tab Tugas (kurir) dan Kas kosong, jadi peran itu tidak bisa dinilai | `apps/api/database/seeders/DatabaseSeeder.php` |
-| 12 | FCM native mobile | Backend sudah siap (`/auth/device-token`, `PushNotifier`); mobile belum memanggilnya dan belum punya `firebase_messaging` | `apps/mobile/pubspec.yaml`, `apps/mobile/lib/src/app_dependencies.dart` |
-| 13 | Rilis Play/App Store | Butuh akun + signing produksi | `apps/mobile/README.md` §Belum |
-| 14 | Go-live M10 | Butuh VPS/domain | `infra/DEPLOY.md` |
-| 15 | Adopsi `dart format` sekali saja | Menjalankan `dart format` sekarang menulis ulang seluruh `lib/`+`test/` (gaya baru Dart 3.7), jadi jangan dijalankan setengah jalan | commit terpisah, tanpa perubahan logika |
-| 16 | Golden test visual mobile | Kontras dan tata letak sudah diuji teks; regresi piksel belum dijaga | `apps/mobile/test/` (`matchesGoldenFile`) |
+| 1 | Tegakkan status langganan pada operasi baca + larang naik paket sendiri | `EnsureSubscriptionActive` hanya menahan tulis dan mengecualikan `api/v1/auth/*`; `PATCH /subscription` menulis `PlanTier` langsung | `EnsureSubscriptionActive`, `SubscriptionController` |
+| 2 | Mobile offline: identitas pada cache + pembersihan saat logout | Cache GET tidak memuat identitas user dan tidak dibersihkan; antrean tulis di-flush memakai token siapa pun yang sedang login | `caching_api_transport.dart`, `session_store.dart`, `sync_controller.dart` |
+| 3 | Rilis mobile: guard `API_BASE` + signing rilis + manifest | `apk --release` sukses tanpa keystore (debug signing — terbukti `CN=Android Debug`) dan default `API_BASE` menunjuk loopback emulator; izin lokasi tak terpakai, `allowBackup` belum diset | `app_config.dart`, `android/app/build.gradle.kts`, `AndroidManifest.xml` |
+| 4 | TLS produksi + cookie aman | nginx produksi masih HTTP-only sementara `SESSION_SECURE_COOKIE=true` → login web gagal sampai 443 aktif | `infra/nginx/laundryos.conf`, `infra/DEPLOY.md` |
+| 5 | CI: job E2E API nyata + build image produksi + pin Flutter | E2E Laravel hanya ada di mesin developer, jadi dua bug integrasi terakhir tidak bisa tertangkap CI | `.github/workflows/{api,web,mobile}.yml` |
+| 6 | `restore.sh` + jalur rollback | Masker kegagalan yang sama seperti backup (tanpa `ON_ERROR_STOP`, user/DB hardcoded); tidak ada image berversi atau backup pra-migrasi | `infra/restore.sh`, `infra/docker-compose.prod.yml` |
+| 7 | Deploy `apps/site` | Tidak ada service compose/blok nginx untuk situs; `robots.txt` menjanjikan sitemap yang tidak digenerate | `infra/docker-compose.prod.yml`, `apps/site/astro.config.mjs` |
+| 8 | Seeder demo: `delivery_tasks`, `cash_entries`, `cash_closings` | Instalasi bersih membuat tab Tugas (kurir) dan Kas kosong, jadi peran itu tidak bisa dinilai | `apps/api/database/seeders/DatabaseSeeder.php` |
+| 9 | FCM native mobile | Backend sudah siap (`/auth/device-token`, `PushNotifier`); mobile belum memanggilnya dan belum punya `firebase_messaging` | `apps/mobile/pubspec.yaml`, `apps/mobile/app_dependencies.dart` |
+| 10 | Rilis Play/App Store | Butuh akun + signing produksi | `apps/mobile/README.md` §Belum |
+| 11 | Go-live M10 | Butuh VPS/domain | `infra/DEPLOY.md` |
+| 12 | Adopsi `dart format` sekali saja | Menjalankan `dart format` sekarang menulis ulang seluruh `lib/`+`test/` (gaya baru Dart 3.7), jadi jangan dijalankan setengah jalan | commit terpisah, tanpa perubahan logika |
+| 13 | Golden test visual mobile | Kontras dan tata letak sudah diuji teks; regresi piksel belum dijaga | `apps/mobile/test/` (`matchesGoldenFile`) |
 
 Backlog fitur (pasca-MVP, butuh pihak ketiga): payment gateway, WhatsApp Business, printer thermal ESC/POS,
 rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
@@ -194,7 +191,7 @@ status gate `past_due`, invite staf) · **R4** web/mobile/site.
 
 | Tanggal | Catatan | Hasil inti |
 |---|---|---|
-| 2026-09-14 | Audit go-live + batch perbaikan pertama | lihat §9 (125 test backend · pint 167 file · phpstan 0 · coverage 92,2% · web 51 unit/19+2 E2E · mobile 0 issue/62 test/apk debug) |
+| 2026-09-14 | Audit go-live + dua batch perbaikan | lihat §9 dan §10 (135 test backend · pint 169 file · phpstan 0 · coverage 92,5% · web 51 unit/19+2 E2E · mobile 0 issue/62 test/apk debug) |
 | 2026-09-14 | Integrasi web↔mobile + UI mobile baru | lihat §1 dan §4 |
 | 2026-09-13 | Plan produksi M0–M9 | Backend 121 test · web 51 unit + 18 E2E mock + 2 E2E Laravel · Flutter 25 test · coverage 92,2% |
 | 2026-09-04 | Baseline sebelum plan produksi | Backend 109 test · web 41 unit · `next build` exit 0 · 6 E2E + 6/6 container Up |
@@ -220,5 +217,21 @@ Gate setelah perbaikan: backend 125 test / 428 assertion · `pint --test` PASS 1
 coverage 92,2% · web `tsc`/`eslint` 0 · vitest 51 · `next build` 19 route · E2E mock 19 + Laravel 2 ·
 mobile `analyze` 0 issue, 62 test, `apk --debug` exit 0.
 
-Belum dikerjakan (masih blocker, rinci di §5): provisi tenant pertama, scope/disk bukti foto, `/track`,
-status langganan, lifecycle cache offline, guard rilis mobile, TLS produksi, CI, `restore.sh`, deploy situs.
+Belum dikerjakan setelah batch pertama (dikerjakan di §10): provisi tenant pertama, scope/disk bukti foto,
+`/track`. Sisanya masih blocker dan rinci di §5.
+
+---
+
+## 10. Batch perbaikan go-live kedua (2026-09-14)
+
+Tiga blocker berikutnya: jalur produksi nyata (provisioning, foto bukti, pelacakan publik).
+
+| # | Cacat | Perbaikan | Bukti |
+|---|---|---|---|
+| 6 | Tidak ada jalan membuat tenant pertama di produksi — `DEPLOY.md` §4 menyuruh `tinker` manual | Command `tenant:provision {--name} {--outlet} {--email} {--password} {--plan}` (membuat tenant aktif + outlet + owner, kode outlet 3 huruf unik per tenant, idempoten by email); `DEPLOY.md` §4 memuat perintah yang bisa disalin | Live di stack dev: perintah pertama → `Tenant #2 "Uji Provisi" (starter)` + `Outlet #3 … kode TEB` + `Owner #7`, exit 0; owner hasil provisi bisa login (`role: owner`); dijalankan ulang dengan email sama → exit 1 tanpa baris baru; data uji lalu dibersihkan. Test `ProvisionTenantTest` (5 kasus: sukses, email duplikat, opsi kosong, paket salah, kata sandi pendek) |
+| 7 | Foto bukti tersimpan di prefix datar pada disk `public` dan disajikan tanpa autentikasi | `proof()` menyimpan ke `proofs/{tenant_id}/{outlet_id}`; disk default `local` (privat); `proof_url` menjadi URL bertanda tangan + kedaluwarsa 30 menit ke route baru `GET /delivery-tasks/{task}/proof` (`signed`, throttle 60/menit) yang menyajikan berkas dari disk apa pun | Live: unggah sebagai kurir → `proof_path = proofs/1/1/<hash>.png`, berkas ada di `storage/app/private/…`; `proof_url` = `…/proof?expires=…&signature=…`; GET tanpa auth → **200, 66 byte, image/png**; GET tanpa signature → **403**; signature palsu → **403**. Test: scope path + URL bertanda tangan bisa dibuka, tanpa/ dengan tanda tangan palsu 403, task tanpa berkas 404 |
+| 8 | `/track` mencocokkan satu kandidat `first()` lintas tenant dan membandingkan telepon dengan normalisasi longgar | Semua kandidat ticket diperiksa, pembandingan memakai `hash_equals` setelah normalisasi digit, dan hanya diterima bila **tepat satu** cocok; nomor tanpa digit ditolak lebih awal | Test: tiket sama di dua tenant tidak tertukar (masing-masing telepon menerima total miliknya), tiket ambigu dengan telepon sama → 404, telepon tanpa digit → 404, spasi → 422. Live: ticket+telepon benar 200, telepon salah 404 |
+
+Gate setelah batch kedua: backend **135 test / 463 assertion** · `pint --test` PASS **169 file** ·
+`phpstan` **0 error** (tanpa menambah entri baseline) · coverage **92,5%** · web `tsc`/`eslint` 0 ·
+vitest 51 · `next build` 19 route · E2E mock 19 + Laravel 2 · mobile `analyze` 0 issue + 62 test.

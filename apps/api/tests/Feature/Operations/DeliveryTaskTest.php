@@ -12,6 +12,7 @@ use App\Domains\Operations\Models\DeliveryTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -117,9 +118,10 @@ class DeliveryTaskTest extends TestCase
         $this->postJson("/api/v1/delivery-tasks/{$id}/status", ['status' => 'in_progress'])->assertForbidden();
     }
 
-    public function test_upload_bukti_menyimpan_file(): void
+    public function test_upload_bukti_menyimpan_file_dan_menyajikannya_lewat_url_bertanda_tangan(): void
     {
-        Storage::fake('public');
+        $disk = config('filesystems.proof_disk');
+        Storage::fake($disk);
         Sanctum::actingAs($this->manager);
         $id = $this->postJson('/api/v1/delivery-tasks', $this->taskPayload())->json('data.id');
 
@@ -127,12 +129,50 @@ class DeliveryTaskTest extends TestCase
         $this->postJson("/api/v1/delivery-tasks/{$id}/status", ['status' => 'in_progress'])->assertOk();
         $this->postJson("/api/v1/delivery-tasks/{$id}/status", ['status' => 'done'])->assertOk();
 
-        $this->postJson("/api/v1/delivery-tasks/{$id}/proof", [
+        $url = $this->postJson("/api/v1/delivery-tasks/{$id}/proof", [
             'proof' => UploadedFile::fake()->image('bukti.jpg'),
-        ])->assertOk()->assertJsonStructure(['data' => ['proof_url']]);
+        ])->assertOk()->json('data.proof_url');
 
         $task = DeliveryTask::find($id);
-        Storage::disk('public')->assertExists($task->proof_path);
+
+        // Path wajib ter-scope tenant+outlet, bukan prefix datar bersama.
+        $this->assertStringStartsWith("proofs/{$this->tenant->id}/{$this->outlet->id}/", $task->proof_path);
+        Storage::disk($disk)->assertExists($task->proof_path);
+
+        // Tautan yang dikirim ke klien harus bisa dipakai langsung (untuk <img>).
+        $this->assertStringContainsString('signature=', (string) $url);
+        $this->get((string) $url)->assertOk();
+    }
+
+    public function test_url_bukti_tanpa_tanda_tangan_ditolak(): void
+    {
+        $disk = config('filesystems.proof_disk');
+        Storage::fake($disk);
+        Sanctum::actingAs($this->manager);
+        $id = $this->postJson('/api/v1/delivery-tasks', $this->taskPayload())->json('data.id');
+
+        Sanctum::actingAs($this->driver);
+        $this->postJson("/api/v1/delivery-tasks/{$id}/status", ['status' => 'in_progress'])->assertOk();
+        $this->postJson("/api/v1/delivery-tasks/{$id}/proof", [
+            'proof' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertOk();
+
+        // Tanpa tanda tangan, dan dengan tanda tangan yang diubah: 403.
+        $this->get("/api/v1/delivery-tasks/{$id}/proof")->assertForbidden();
+        $this->get("/api/v1/delivery-tasks/{$id}/proof?expires=1&signature=palsu")->assertForbidden();
+    }
+
+    public function test_bukti_task_tanpa_file_404(): void
+    {
+        Sanctum::actingAs($this->manager);
+        $id = $this->postJson('/api/v1/delivery-tasks', $this->taskPayload())->json('data.id');
+        $task = DeliveryTask::find($id);
+
+        $url = URL::temporarySignedRoute('delivery-tasks.proof', now()->addMinutes(30), [
+            'delivery_task' => $task->id,
+        ]);
+
+        $this->get($url)->assertNotFound();
     }
 
     public function test_task_tenant_lain_404(): void
