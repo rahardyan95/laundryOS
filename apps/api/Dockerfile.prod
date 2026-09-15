@@ -21,7 +21,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 # ---------------------------------------------------------------------------
 # Stage 2 — base runtime: PHP-FPM + ekstensi + opcache.
 # ---------------------------------------------------------------------------
-FROM php:8.4-fpm AS base
+FROM php:8.5-fpm AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq-dev libicu-dev libzip-dev libonig-dev libpng-dev libjpeg-dev unzip \
