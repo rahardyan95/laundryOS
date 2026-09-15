@@ -44,7 +44,7 @@ jobs:
       run:
         working-directory: infra
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build API image
         run: docker compose build api
@@ -80,7 +80,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build API production image
         run: docker build -t laundryos-api:ci -f apps/api/Dockerfile.prod apps/api
