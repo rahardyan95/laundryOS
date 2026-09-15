@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { loginAsOwner } from "./helpers";
 
 test("home memuat navigasi dan CTA berfungsi", async ({ page }) => {
   const errors: string[] = [];
@@ -30,4 +31,19 @@ test("home mobile rapi", async ({ page }) => {
 
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(scrollWidth).toBeLessThanOrEqual(390);
+});
+
+test("home full-load saat login tanpa hydration error", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+
+  await loginAsOwner(page);
+  await expect(page).toHaveURL(/\/dashboard/);
+
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Buka Dashboard" }).first()).toBeVisible();
+  expect(errors).toEqual([]);
 });

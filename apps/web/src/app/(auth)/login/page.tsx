@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/layout/logo";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/api-error";
+import { AppMode } from "@/lib/app-mode";
 import { SessionManager } from "@/lib/api/session";
 
 const demoAccounts = [
@@ -45,6 +46,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const apiMode = process.env.NEXT_PUBLIC_API_MODE;
+  const demoHint = AppMode.demoHint(apiMode);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -134,12 +137,17 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="Isi bebas (mode demo)"
+                placeholder={AppMode.passwordPlaceholder(apiMode)}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
+            {demoHint ? (
+              <p className="text-xs text-muted-foreground" data-testid="demo-hint">
+                {demoHint}
+              </p>
+            ) : null}
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>

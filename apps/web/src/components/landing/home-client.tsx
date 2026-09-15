@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useSyncExternalStore, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -61,7 +61,15 @@ const roles: { title: string; description: string }[] = [
 const stages = ["Diterima", "Dicuci", "Dikeringkan", "Disetrika", "Siap Diambil", "Selesai"] as const;
 
 export function HomeClient() {
-  const [loggedIn] = useState(() => SessionManager.get() !== null);
+  // Sesi dibaca lewat useSyncExternalStore dengan snapshot server null:
+  // HTML SSR/prerender dan render pertama klien identik ("belum login"),
+  // sesi nyata dipakai setelah mount — anti hydration mismatch.
+  const session = useSyncExternalStore(
+    SessionManager.subscribe,
+    SessionManager.getSnapshot,
+    () => null
+  );
+  const loggedIn = session !== null;
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (

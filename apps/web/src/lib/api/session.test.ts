@@ -43,4 +43,23 @@ describe("SessionManager", () => {
     expect(SessionManager.get()).toBeNull();
     expect(SessionManager.outletId()).toBeNull();
   });
+
+  it("getSnapshot stabil referensinya selama storage tak berubah", () => {
+    SessionManager.set(payload);
+    const first = SessionManager.getSnapshot();
+    expect(SessionManager.getSnapshot()).toBe(first);
+    expect(first?.user.email).toBe("owner@laundryos.test");
+  });
+
+  it("subscribe dipanggil saat set dan clear", () => {
+    let calls = 0;
+    const unsubscribe = SessionManager.subscribe(() => {
+      calls += 1;
+    });
+    SessionManager.set(payload);
+    SessionManager.clear();
+    unsubscribe();
+    SessionManager.set(payload);
+    expect(calls).toBe(2);
+  });
 });

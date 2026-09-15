@@ -128,6 +128,22 @@ class NotificationTest extends TestCase
         $this->getJson('/api/v1/notifications/unread-count')->assertOk()->assertJsonPath('data.unread', 0);
     }
 
+    public function test_tandai_semua_dibaca_mengosongkan_badge_tanpa_menyentuh_milik_orang_lain(): void
+    {
+        Sanctum::actingAs(User::factory()->forTenant($this->tenant)->withRole(Role::Cashier)->create());
+        $this->postJson('/api/v1/orders', $this->orderPayload())->assertCreated();
+
+        Sanctum::actingAs($this->owner);
+        $this->getJson('/api/v1/notifications/unread-count')->assertOk()->assertJsonPath('data.unread', 1);
+
+        $this->postJson('/api/v1/notifications/read-all')->assertOk();
+
+        $this->getJson('/api/v1/notifications/unread-count')->assertOk()->assertJsonPath('data.unread', 0);
+
+        Sanctum::actingAs($this->manager);
+        $this->getJson('/api/v1/notifications/unread-count')->assertOk()->assertJsonPath('data.unread', 1);
+    }
+
     public function test_tidak_bisa_membaca_notifikasi_orang_lain(): void
     {
         Sanctum::actingAs(User::factory()->forTenant($this->tenant)->withRole(Role::Cashier)->create());

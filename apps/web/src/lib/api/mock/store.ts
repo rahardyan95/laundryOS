@@ -663,6 +663,13 @@ export class InMemoryStore {
     item.readAt = new Date().toISOString();
   }
 
+  markAllNotificationsRead(): void {
+    const now = new Date().toISOString();
+    for (const item of this.notificationList) {
+      item.readAt = now;
+    }
+  }
+
   private pushOrderNotification(order: Order, status: OrderStatus): void {
     const label = OrderMachine.label(status);
     this.notificationList.push({

@@ -33,6 +33,12 @@ test("semua halaman utama tanpa console error", async ({ page }) => {
 });
 
 test("tampilan mobile 390px tanpa scroll horizontal", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+
   await page.setViewportSize({ width: 390, height: 844 });
   await loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
@@ -45,4 +51,5 @@ test("tampilan mobile 390px tanpa scroll horizontal", async ({ page }) => {
 
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(scrollWidth).toBeLessThanOrEqual(390);
+  expect(errors).toEqual([]);
 });

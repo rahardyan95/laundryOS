@@ -101,6 +101,19 @@ class AuthTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
+    public function test_logout_sesi_spa_tidak_error_dan_mengakhiri_sesi(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $user = User::factory()->forTenant($tenant)->create();
+
+        // actingAs('web') membuat sanctum guard memakai TransientToken —
+        // persis seperti sesi cookie SPA di produksi (dulu 500 di sini).
+        $this->actingAs($user, 'web');
+
+        $this->postJson('/api/v1/auth/logout')->assertOk();
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
     public function test_guest_tanpa_header_json_tetap_401(): void
     {
         $this->get('/api/v1/auth/me')

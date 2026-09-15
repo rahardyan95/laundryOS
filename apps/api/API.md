@@ -62,6 +62,7 @@ Throttle grup `api`: 60/menit per pengguna (atau per IP bila tamu). Login & `tra
 | GET | `/notifications` | semua (milik sendiri) | Paginasi standar |
 | GET | `/notifications/unread-count` | semua | `{unread}` |
 | POST | `/notifications/{id}/read` | pemilik notif | Asing → 404 |
+| POST | `/notifications/read-all` | semua | Tandai semua milik sendiri; badge → 0 |
 | GET | `/dashboard/summary` | owner, manajer | `?outlet_id=` |
 | GET | `/reports/summary` | owner, manajer | `from,to,outlet_id` |
 | GET | `/reports/sales.csv` | owner, manajer | Unduh CSV |

@@ -40,4 +40,11 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'Notifikasi ditandai sudah dibaca.']);
     }
+
+    public function readAll(Request $request): JsonResponse
+    {
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
+        return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca.']);
+    }
 }

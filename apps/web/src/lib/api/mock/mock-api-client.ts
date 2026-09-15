@@ -190,6 +190,11 @@ export class MockApiClient extends ApiClient {
     this.store.markNotificationRead(id);
   }
 
+  async markAllNotificationsRead(): Promise<void> {
+    await this.networkDelay(40, 80);
+    this.store.markAllNotificationsRead();
+  }
+
   async getReportSummary(outletId?: string, from?: string, to?: string): Promise<ReportSummary> {
     await this.networkDelay();
     return this.store.reportSummary(outletId, from, to);

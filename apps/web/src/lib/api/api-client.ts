@@ -58,6 +58,7 @@ export abstract class ApiClient {
   abstract listNotifications(): Promise<AppNotification[]>;
   abstract getUnreadCount(): Promise<number>;
   abstract markNotificationRead(id: string): Promise<void>;
+  abstract markAllNotificationsRead(): Promise<void>;
   abstract getReportSummary(outletId?: string, from?: string, to?: string): Promise<ReportSummary>;
   abstract downloadSalesCsv(outletId?: string, from?: string, to?: string): Promise<Blob>;
 

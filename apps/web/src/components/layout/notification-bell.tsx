@@ -57,6 +57,17 @@ export function NotificationBell() {
     }
   }
 
+  async function handleReadAll() {
+    try {
+      await api.markAllNotificationsRead();
+      const now = new Date().toISOString();
+      setItems((prev) => prev.map((n) => (n.readAt ? n : { ...n, readAt: now })));
+      setUnread(0);
+    } catch {
+      // abaikan: hitung ulang saat refresh berikutnya
+    }
+  }
+
   return (
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
@@ -70,7 +81,14 @@ export function NotificationBell() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notifikasi</span>
+          {unread > 0 ? (
+            <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={handleReadAll}>
+              Tandai semua dibaca
+            </Button>
+          ) : null}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {items.length === 0 ? (
           <p className="px-2 py-4 text-center text-sm text-muted-foreground">

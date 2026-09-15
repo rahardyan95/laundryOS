@@ -1,20 +1,24 @@
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
+const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean>(
-    () => typeof window !== "undefined" && window.innerWidth < MOBILE_BREAKPOINT
-  )
+function subscribe(callback: () => void): () => void {
+  const mql = window.matchMedia(MOBILE_QUERY)
+  mql.addEventListener("change", callback)
+  return () => mql.removeEventListener("change", callback)
+}
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+function getSnapshot(): boolean {
+  return window.innerWidth < MOBILE_BREAKPOINT
+}
 
-  return isMobile
+function getServerSnapshot(): boolean {
+  return false
+}
+
+export function useIsMobile(): boolean {
+  // Snapshot server false: HTML SSR/prerender dan render pertama klien
+  // identik — anti hydration mismatch di viewport seluler.
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }

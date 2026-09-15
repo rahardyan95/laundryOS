@@ -1,0 +1,20 @@
+# Development image untuk web (Next.js hot-reload).
+# Beda dengan Dockerfile.prod: env NEXT_PUBLIC_* dibaca saat runtime `next dev`,
+# bukan di-bake saat build — ganti mock <-> laravel tanpa rebuild.
+# Dipakai dari infra/docker-compose.yml (service `web`).
+# syntax=docker/dockerfile:1
+
+FROM node:24-alpine
+RUN corepack enable
+WORKDIR /app
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Install dulu hanya manifest agar layer cache bertahan saat src berubah.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install
+
+COPY . .
+
+EXPOSE 3000
+CMD ["pnpm", "dev", "--port", "3000", "--hostname", "0.0.0.0"]

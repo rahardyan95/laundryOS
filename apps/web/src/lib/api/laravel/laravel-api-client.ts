@@ -305,6 +305,10 @@ export class LaravelApiClient extends ApiClient {
     await this.http.post(`/notifications/${id}/read`);
   }
 
+  async markAllNotificationsRead(): Promise<void> {
+    await this.http.post("/notifications/read-all");
+  }
+
   async getReportSummary(outletId?: string, from?: string, to?: string): Promise<ReportSummary> {
     const params: Record<string, string> = {};
     if (outletId) params.outlet_id = outletId;
