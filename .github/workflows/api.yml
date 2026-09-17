@@ -121,3 +121,63 @@ jobs:
         run: |
           cp .env.prod.example .env.prod
           docker compose --env-file .env.prod -f docker-compose.prod.yml config --quiet
+
+  # Drill backup+restore otomatis (T1 go-live): backup DB dev berisi seed,
+  # restore ke database uji terpisah, assert tabel + data pulih, DB produksi
+  # tak tersentuh. Terbukti lokal 2026-09-17: 25 tabel + owner@laundryos.test.
+  restore-drill:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start database
+        run: docker compose up -d --wait pgsql
+
+      - name: Install API dependencies
+        run: docker compose run --rm -T api composer install --no-interaction
+
+      - name: Seed dev database
+        run: docker compose run --rm -T api php artisan migrate:fresh --seed
+
+      - name: Backup, restore to test DB, verify
+        run: |
+          cp .env.dev.example .env.dev
+          export COMPOSE_FILE=docker-compose.yml ENV_FILE=.env.dev
+          ./backup-prod.sh
+          ARCHIVE="$(ls -t backups/laundry-*.sql.gz | head -1)"
+          ./restore.sh --force --db laundry_uji "$ARCHIVE"
+          TABLES="$(docker compose -f "$COMPOSE_FILE" exec -T pgsql psql -U laundry -d laundry_uji -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")"
+          test "$TABLES" -gt 0 || (echo "restore drill: 0 tabel di laundry_uji" >&2; exit 1)
+          OWNER="$(docker compose -f "$COMPOSE_FILE" exec -T pgsql psql -U laundry -d laundry_uji -tAc "SELECT email FROM users WHERE email='owner@laundryos.test'")"
+          test "$OWNER" = "owner@laundryos.test" || (echo "restore drill: seed owner hilang" >&2; exit 1)
+          PROD_COUNT="$(docker compose -f "$COMPOSE_FILE" exec -T pgsql psql -U laundry -d laundry -tAc "SELECT count(*) FROM users")"
+          test "$PROD_COUNT" -gt 0 || (echo "restore drill: DB laundry tersentuh" >&2; exit 1)
+          docker compose -f "$COMPOSE_FILE" exec -T pgsql psql -U laundry -d postgres -c "DROP DATABASE laundry_uji WITH (FORCE)"
+
+  # Beban tulis baca-tulis (T7 go-live): login sekali/VU, buat order + lacak +
+  # kas summary. Thresholds = gate (gagalkan job bila jebol). Terbukti lokal
+  # 2026-09-17: checks 100%, error 0%. P95_MS ketat untuk staging php-fpm.
+  load:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Boot API stack with seed
+        run: |
+          docker compose build api
+          docker compose up -d --wait
+          docker compose run --rm -T api composer install --no-interaction
+          docker compose run --rm -T api php artisan migrate:fresh --seed
+
+      - name: k6 write scenario
+        run: |
+          docker run --rm --network infra_default \
+            -e API_URL=http://api:8000/api/v1 \
+            -e VUS=1 -e DURATION=60s -e P95_MS=800 \
+            -v "$PWD/load:/scripts" grafana/k6:latest run /scripts/k6-api.js

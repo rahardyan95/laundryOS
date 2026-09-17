@@ -136,6 +136,11 @@ dengan HTTP. Urutan berikut bisa disalin apa adanya (ganti domain asli):
    `SESSION_SECURE_COOKIE=true` di `.env.prod` baru bisa bekerja — sebelum TLS aktif, cookie
    `Secure` tidak pernah dikirim balik oleh browser sehingga login tampak "tidak terjadi apa-apa".
 
+   Bukti T5 yang wajib dicatat (go-live): header `Set-Cookie` respons login memuat
+   `Secure` + `HttpOnly`, dashboard terbuka, dan `localStorage/sessionStorage` tidak
+   memuat token (bukti cookie httpOnly — sama seperti assert
+   `e2e-laravel/auth-orders.spec.ts`).
+
 6. **Perpanjangan otomatis + reload nginx:**
    ```bash
    docker compose --env-file .env.prod -f docker-compose.prod.yml --profile tls up -d certbot
@@ -203,6 +208,10 @@ WEB_IMAGE=laundryos-web:2026-09-13 \
 SITE_IMAGE=laundryos-site:2026-09-13 \
   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --remove-orphans --no-build
 ```
+
+> Bukti T6 yang wajib dicatat (go-live): output `deploy-prod.sh`/rollback memuat
+> `/up` + `/api/v1/health` → `200` pada tag lama, plus tanggal dan tag versi
+> yang sedang live di log operasi.
 
 `--no-build` penting: tanpa itu compose akan membangun ulang dari sumber sekarang kalau tag lama
 sudah hilang, dan "rollback" diam-diam berubah jadi deploy baru. Karena itu jangan memangkas image

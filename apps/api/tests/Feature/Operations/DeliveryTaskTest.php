@@ -144,6 +144,30 @@ class DeliveryTaskTest extends TestCase
         $this->get((string) $url)->assertOk();
     }
 
+    public function test_upload_bukti_disk_s3_menyajikan_url_bertanda_tangan(): void
+    {
+        config(['filesystems.proof_disk' => 's3']);
+        Storage::fake('s3');
+        Sanctum::actingAs($this->manager);
+        $id = $this->postJson('/api/v1/delivery-tasks', $this->taskPayload())->json('data.id');
+
+        Sanctum::actingAs($this->driver);
+        $this->postJson("/api/v1/delivery-tasks/{$id}/status", ['status' => 'in_progress'])->assertOk();
+        $this->postJson("/api/v1/delivery-tasks/{$id}/status", ['status' => 'done'])->assertOk();
+
+        $url = $this->postJson("/api/v1/delivery-tasks/{$id}/proof", [
+            'proof' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertOk()->json('data.proof_url');
+
+        $task = DeliveryTask::find($id);
+
+        $this->assertStringStartsWith("proofs/{$this->tenant->id}/{$this->outlet->id}/", $task->proof_path);
+        Storage::disk('s3')->assertExists($task->proof_path);
+        $this->assertStringContainsString('signature=', (string) $url);
+        $this->get((string) $url)->assertOk();
+        $this->get("/api/v1/delivery-tasks/{$id}/proof")->assertForbidden();
+    }
+
     public function test_url_bukti_tanpa_tanda_tangan_ditolak(): void
     {
         $disk = config('filesystems.proof_disk');

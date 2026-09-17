@@ -129,3 +129,40 @@ jobs:
       # playwright.laravel.config.ts) dengan NEXT_PUBLIC_API_MODE=laravel.
       - name: E2E against real API
         run: pnpm --filter web exec playwright test -c playwright.laravel.config.ts
+
+  # E2E lawan production build (T11 go-live): Next.js merekomendasikan E2E
+  # melawan `next build + next start` agar perilaku ≈ produksi (minifikasi,
+  # prerender, env bake). Spec kritis: auth-orders, roles, track, smoke.
+  e2e-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Production build
+        run: pnpm --filter web build
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: E2E against production build
+        working-directory: apps/web
+        run: |
+          (pnpm start --port 3100 &)
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:3100/login > /dev/null && break
+            sleep 2
+          done
+          pnpm exec playwright test -c playwright.prod.config.ts auth-orders roles track smoke

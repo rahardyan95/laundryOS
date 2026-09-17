@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Support;
 
+use App\Domains\Catalog\Models\Customer;
+use App\Domains\Catalog\Models\Service;
 use App\Domains\Identity\Enums\Role;
 use App\Domains\Identity\Models\Outlet;
 use App\Domains\Identity\Models\Tenant;
@@ -26,6 +28,20 @@ class IdempotencyTest extends TestCase
         $this->tenant = Tenant::factory()->create();
         $this->outlet = Outlet::factory()->forTenant($this->tenant)->create();
         $this->owner = User::factory()->forTenant($this->tenant)->withRole(Role::Owner)->create();
+    }
+
+    private function orderPayload(): array
+    {
+        $customer = Customer::factory()->forTenant($this->tenant)->forOutlet($this->outlet)->create();
+        $service = Service::factory()->forTenant($this->tenant)->create(['price_per_unit' => 11000]);
+
+        return [
+            'outlet_id' => $this->outlet->id,
+            'customer_id' => $customer->id,
+            'items' => [['service_id' => $service->id, 'qty' => 2]],
+            'payment_method' => 'cash',
+            'paid_amount' => 22000,
+        ];
     }
 
     public function test_mutasi_dengan_key_sama_hanya_dijalankan_sekali(): void
@@ -66,5 +82,21 @@ class IdempotencyTest extends TestCase
         $this->postJson('/api/v1/customers', $payload, ['Idempotency-Key' => 'key-shared'])->assertCreated();
 
         $this->assertDatabaseCount('customers', 2);
+    }
+
+    public function test_order_dengan_key_sama_hanya_dibuat_sekali(): void
+    {
+        Sanctum::actingAs($this->owner);
+        $payload = $this->orderPayload();
+
+        $first = $this->postJson('/api/v1/orders', $payload, ['Idempotency-Key' => 'order-key-1'])
+            ->assertCreated();
+
+        $second = $this->postJson('/api/v1/orders', $payload, ['Idempotency-Key' => 'order-key-1'])
+            ->assertCreated();
+
+        $second->assertHeader('Idempotency-Replayed', 'true');
+        $this->assertSame($first->json('data.id'), $second->json('data.id'));
+        $this->assertDatabaseCount('orders', 1);
     }
 }

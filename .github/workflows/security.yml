@@ -59,3 +59,37 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
+
+  # DAST baseline lawan stack dev (T13 go-live): spider pasif + tanpa serangan
+  # aktif — aman untuk CI (zaproxy.org/docs/docker/baseline-scan). Gagalkan
+  # bila ada temuan FAIL; WARN dilaporkan tanpa menggagalkan.
+  zap-baseline:
+    name: DAST baseline (ZAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Boot API + web stack with seed
+        working-directory: infra
+        run: |
+          docker compose build api web
+          docker compose up -d --wait
+          docker compose run --rm -T api composer install --no-interaction
+          docker compose run --rm -T api php artisan migrate:fresh --seed
+
+      - name: ZAP baseline scan
+        run: |
+          docker run --rm --network infra_default \
+            -v "$PWD:/zap/wrk/:rw" -t ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://web:3000 -t http://api:8000/api/v1/health \
+            -m 2 -r zap_baseline.html -J zap_baseline.json || test $? -le 2
+
+      - name: Fail on ZAP FAIL findings
+        run: |
+          python3 -c "
+          import json, sys
+          report = json.load(open('zap_baseline.json'))
+          fails = [a for s in report.get('site', []) for a in s.get('alerts', []) if a.get('riskcode') == '3']
+          print(f'ZAP HIGH findings: {len(fails)}')
+          sys.exit(1 if fails else 0)
+          "

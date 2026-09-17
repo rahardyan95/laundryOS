@@ -74,18 +74,19 @@ Dijalankan dari root kecuali disebut lain; jalankan **semua** sebelum menyatakan
 
 | Gate | Perintah | Hasil terakhir |
 |---|---|---|
-| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **145 passed, 508 assertions** (2026-09-17, komit 64c6aef) |
-| Backend gaya | `… php vendor/bin/pint --test` | PASS, 171 file |
+| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **154 passed, 546 assertions** (2026-09-17, T2/T3/T4/T8/T9 go-live) |
+| Backend gaya | `… php vendor/bin/pint --test` | PASS, 174 file |
 | Backend analisis | `… composer analyse` (Larastan L5) | 0 error |
-| Coverage | `… composer test:coverage` | 92,3% (gate 90) |
+| Coverage | `… composer test:coverage` | 92,5% (gate 90) |
 | Web tipe/lint | `pnpm --filter web exec tsc --noEmit` · `pnpm --filter web exec eslint src` | 0 · 0 |
 | Web unit | `pnpm --filter web exec vitest run` | 62 passed (2026-09-17, komit 64c6aef) |
 | Web build | `pnpm --filter web build` | exit 0 |
 | Web E2E mock | `pnpm --filter web test:e2e` | 19 passed |
 | Web E2E API nyata | `pnpm --filter web test:e2e:laravel` | 2 passed |
 | Mobile analisis | `cd apps/mobile && flutter analyze` | 0 issue |
-| Mobile test | `flutter test` | 81 passed (4 berkas golden) |
+| Mobile test | `flutter test` | 81 passed (4 berkas golden) + T10 `integration_test/order_sync_test.dart` hijau di emulator Pixel_7_Pro |
 | Mobile build | `flutter build apk --debug` | exit 0 |
+| Mobile release guard | `flutter build appbundle --release` tanpa keystore | ditolak guard (terbukti 2026-09-17); dengan `-PallowDebugSigning=true` → AAB 54.5MB |
 | Site | `pnpm --filter site build` | 3 halaman + sitemap |
 | Infra prod | `cd infra && cp .env.prod.example .env.prod && docker compose -f docker-compose.prod.yml config --quiet` | valid |
 | Nginx | `docker run --rm --add-host api:127.0.0.1 --add-host web:127.0.0.1 --add-host site:127.0.0.1 -v "$PWD/infra/nginx/laundryos.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.27-alpine nginx -t` | successful |
@@ -242,7 +243,7 @@ rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
 
 | Tanggal | Catatan | Hasil inti |
 |---|---|---|
-| 2026-09-17 | OOP enforcement + Docker live + refaktor penuh web/mobile | backend 145/508 · pint 172 · tsc 0 · eslint 0 · vitest 62/62 · next build exit 0 · E2E mock 20 (1 skip) + laravel 2 · mobile analyze 0 + test 81 · 7/7 container Up · login owner + Order Baru diverifikasi browser |
+| 2026-09-17 | Go-live test plan T1–T13 (otomatis + drill lokal) | backend 154/546 · cov 92,5% · k6 checks 100% error 0% · T11 prod-build E2E 9/9 · T10 emulator hijau · ZAP 0 FAIL/7 WARN · restore drill 25 tabel + owner pulih |
 | 2026-09-14 | Audit go-live + tiga batch perbaikan | 141 test backend · pint 171 file · phpstan 0 · coverage 92,3% · web 51 unit + 19/2 E2E · mobile 0 issue + 81 test · apk debug |
 | 2026-09-14 | Integrasi web↔mobile + UI mobile baru | login cookie httpOnly, `/orders` dari PostgreSQL, kurir melihat tugas nyata; cacat CORS, `_TypeError` typed collection, dan locale `id_ID` ditemukan lewat menjalankan aplikasi (bukan test) |
 | 2026-09-13 | Plan produksi M0–M9 | backend 121 test · web 51 unit + 18 E2E mock + 2 E2E Laravel · Flutter 25 test · coverage 92,2% |

@@ -48,16 +48,16 @@ Ikuti `infra/DEPLOY.md` berurutan; ringkasannya:
 
 | # | Verifikasi | Perintah / cara | Hasil yang diharapkan |
 |---|---|---|---|
-| 1 | Liveness & kesehatan dalam | `curl -fsS https://app.<domain>/up` · `curl -fsS https://app.<domain>/api/v1/health` | `200`; health memeriksa DB + cache (503 bila salah satu mati) |
-| 2 | Login owner hasil provisi | buka `https://app.<domain>/login` | dashboard terbuka; token/cookie terpasang |
-| 3 | CORS origin web | preflight `OPTIONS /api/v1/auth/login` dengan `Origin: https://app.<domain>` | header `Access-Control-Allow-Origin` sesuai origin, bukan `*` |
-| 4 | Rate limit tidak bisa dipalsukan | 11× login salah dengan `X-Forwarded-For` berbeda tiap kali | percobaan ke-11 `429` |
+| 1 | Liveness & kesehatan dalam | `curl -fsS https://app.<domain>/up` · `curl -fsS https://app.<domain>/api/v1/health` | `200`; health memeriksa DB + cache (503 bila salah satu mati — teruji `HealthTest` T2) |
+| 2 | Login owner hasil provisi | buka `https://app.<domain>/login` | dashboard terbuka; token/cookie terpasang — bukti T5: `Set-Cookie` memuat `Secure`+`HttpOnly`, storage tanpa token |
+| 3 | CORS origin web | preflight `OPTIONS /api/v1/auth/login` dengan `Origin: https://app.<domain>` | header `Access-Control-Allow-Origin` sesuai origin, bukan `*` (teruji `CorsTest` T3) |
+| 4 | Rate limit tidak bisa dipalsukan | 11× login salah dengan `X-Forwarded-For` berbeda tiap kali | percobaan ke-11 `429` (teruji `AuthTest` + `TrustedProxyTest` T4) |
 | 5 | Pelacakan pelanggan | buat order, lalu buka `https://app.<domain>/lacak` dengan nomor ticket + telepon | data order muncul; telepon salah → tidak ditemukan |
-| 6 | Bukti foto | unggah bukti dari aplikasi kurir | `proof_url` bertanda tangan; buka URL → `200`; hapus `signature` → `403` |
+| 6 | Bukti foto | unggah bukti dari aplikasi kurir | `proof_url` bertanda tangan; buka URL → `200`; hapus `signature` → `403` (teruji `DeliveryTaskTest` + varian S3 T8) |
 | 7 | Backup | `./backup-prod.sh` lalu `gzip -t backups/laundry-*.sql.gz` | berkas > 0 byte, gzip utuh, exit 0 |
-| 8 | Restore (drill) | `ENV_FILE=.env.prod ./restore.sh --force --db laundry_uji backups/<arsip>.sql.gz` | ringkasan jumlah tabel; DB produksi tidak tersentuh |
-| 9 | Rollback (drill) | jalankan `deploy-prod.sh` dengan tag versi lama | `/up` + `/api/v1/health` kembali `200` pada versi lama |
-| 10 | Aplikasi mobile | `flutter build appbundle --release --dart-define=API_BASE=https://app.<domain>/api/v1 --dart-define=SENTRY_DSN=…` lalu pasang ke perangkat | login berhasil; tab Tugas & Kas terisi; tanggal berbahasa Indonesia |
+| 8 | Restore (drill) | `ENV_FILE=.env.prod ./restore.sh --force --db laundry_uji backups/<arsip>.sql.gz` | ringkasan jumlah tabel; DB produksi tidak tersentuh (teruji otomatis job `restore-drill` T1) |
+| 9 | Rollback (drill) | jalankan `deploy-prod.sh` dengan tag versi lama | `/up` + `/api/v1/health` kembali `200` pada versi lama (bukti T6 di log operasi) |
+| 10 | Aplikasi mobile | `flutter build appbundle --release --dart-define=API_BASE=https://app.<domain>/api/v1 --dart-define=SENTRY_DSN=…` lalu pasang ke perangkat | login berhasil; tab Tugas & Kas terisi; tanggal berbahasa Indonesia (sinkron offline teruji `integration_test/order_sync_test.dart` T10) |
 | 11 | Situs pemasaran | `curl -fsS https://<domain>/` dan `https://<domain>/sitemap-index.xml` | halaman + sitemap terjawab; `robots.txt` menunjuk host asli |
 
 ---
@@ -75,8 +75,9 @@ Semua langkah build sudah ada di `apps/mobile/README.md` §Rilis; urutan go-live
    `storeFile=…`, `storePassword=…`, `keyAlias=laundryos`, `keyPassword=…`.
 2. **Versi** — naikkan `version: x.y.z+build` di `apps/mobile/pubspec.yaml`.
 3. **Build** — `flutter build appbundle --release --dart-define=API_BASE=https://app.<domain>/api/v1 --dart-define=SENTRY_DSN=…`.
-   Build rilis **gagal** bila `key.properties` tidak ada (guard di `build.gradle.kts`); opsi
-   `-PallowDebugSigning=true` hanya untuk CI/emulator.
+    Build rilis **gagal** bila `key.properties` tidak ada (guard di `build.gradle.kts` — terbukti
+    2026-09-17 menolak unsigned; opsi `-PallowDebugSigning=true` hanya untuk CI/emulator dan
+    menghasilkan AAB 54.5MB).
 4. **Play Console** — buat app, isi Data safety (aplikasi **tidak** meminta izin lokasi,
    `allowBackup=false`, token perangkat untuk notifikasi), unggah AAB, jalankan internal testing →
    closed → production, lalu publikasikan.
