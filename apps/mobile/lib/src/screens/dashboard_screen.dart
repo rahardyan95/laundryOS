@@ -202,7 +202,7 @@ class _ReadyRow extends StatelessWidget {
                 Text(item.ticket,
                     style: AppTypography.mono(context,
                         color: theme.colorScheme.onSurface)),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.labelGap),
                 Text(item.customerName, style: theme.textTheme.bodySmall),
               ],
             ),
