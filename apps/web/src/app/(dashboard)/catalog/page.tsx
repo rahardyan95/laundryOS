@@ -38,6 +38,9 @@ import { ApiError } from "@/lib/api/api-error";
 import { SessionManager } from "@/lib/api/session";
 import type { Service, ServiceUnit } from "@/lib/api/types";
 import { Format } from "@/lib/format";
+import { NavPolicy } from "@/lib/nav-policy";
+import { ServicePricing } from "@/lib/service-pricing";
+import { Sorter } from "@/lib/sorter";
 
 const units: { value: ServiceUnit; label: string }[] = [
   { value: "kg", label: "Kilogram (kg)" },
@@ -122,13 +125,13 @@ export default function CatalogPage() {
         id: editing?.id,
         name: name.trim(),
         unit,
-        pricePerUnit: Math.round(priceValue),
-        estimatedHours: Math.round(hoursValue),
+        pricePerUnit: ServicePricing.roundPrice(priceValue),
+        estimatedHours: ServicePricing.roundHours(hoursValue),
         active,
       });
       setServices((prev) => {
         const rest = prev.filter((s) => s.id !== saved.id);
-        return [...rest, saved].sort((a, b) => a.name.localeCompare(b.name));
+        return Sorter.byNameAsc([...rest, saved]);
       });
       toast.success(editing ? "Layanan diperbarui." : `Layanan ${saved.name} tersimpan.`);
       setDialogOpen(false);
@@ -140,7 +143,7 @@ export default function CatalogPage() {
   }
 
   const role = SessionManager.get()?.user.role;
-  const canManage = role === "owner" || role === "manager";
+  const canManage = NavPolicy.canManageCatalog(role);
 
   return (
     <div className="space-y-4">

@@ -27,7 +27,7 @@ class SectionHeader extends StatelessWidget {
               children: [
                 Text(title, style: theme.textTheme.titleMedium),
                 if (caption != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.labelGap),
                   Text(caption!, style: theme.textTheme.bodySmall),
                 ],
               ],

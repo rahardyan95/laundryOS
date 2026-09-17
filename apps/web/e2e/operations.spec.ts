@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { loginAsOwner } from "./helpers";
+import { E2eAuth } from "./helpers";
 
 test("buat customer baru tampil di tabel", async ({ page }) => {
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
 
   await page.goto("/customers");
@@ -17,7 +17,7 @@ test("catat kas, tutup, kunci entry, buka kembali", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
 
   await page.goto("/cash");

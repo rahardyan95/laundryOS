@@ -1,0 +1,11 @@
+# Shell scripts must keep LF endings — CRLF breaks Linux containers (entrypoint crash).
+*.sh text eol=lf
+# Source files: normalize to LF so Windows checkouts never reintroduce CRLF.
+*.ts text eol=lf
+*.tsx text eol=lf
+*.dart text eol=lf
+*.php text eol=lf
+*.astro text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

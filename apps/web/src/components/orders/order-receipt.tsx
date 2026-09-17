@@ -1,15 +1,11 @@
 import type { Order } from "@/lib/api/types";
 import { Format } from "@/lib/format";
 import { OrderMachine } from "@/lib/order-machine";
+import { PaymentPolicy } from "@/lib/payment-policy";
 
 export function OrderReceipt({ order, outletName }: { order: Order; outletName: string }) {
-  const remaining = order.total - order.paidAmount;
-  const paidLabel =
-    order.paymentStatus === "paid"
-      ? "LUNAS"
-      : order.paymentStatus === "partial"
-        ? `DP ${Format.rupiah(order.paidAmount)}`
-        : "BELUM LUNAS";
+  const remaining = PaymentPolicy.remaining(order.total, order.paidAmount);
+  const paidLabel = PaymentPolicy.receiptLabel(order.paymentStatus, Format.rupiah(order.paidAmount));
 
   return (
     <div className="receipt mx-auto w-72 font-mono text-xs leading-relaxed text-black">

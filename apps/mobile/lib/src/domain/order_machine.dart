@@ -1,4 +1,4 @@
-import "../models/order.dart";
+import "../models/order_status.dart";
 import "status_kind.dart";
 
 /// Mesin status order — cerminan `OrderMachine` di web & `OrderStatus` di API.

@@ -1,6 +1,22 @@
 # LaundryOS — Agent Rules
 
 Aturan proyek yang wajib dipatuhi saat menulis atau mengubah kode.
+Berlaku untuk SEMUA kode di repo ini: `apps/api` (PHP/Laravel), `apps/web`
+(TypeScript/React/Next.js), `apps/mobile` (Dart/Flutter), `apps/site` (Astro),
+`infra/` (skrip shell/compose), dan `docs/` bila menyentuh contoh kode.
+Tidak ada pengecualian: skrip, test, seed, migrasi, dan contoh dokumentasi
+mengikuti aturan yang sama.
+
+## R0 — Definisi Selesai (wajib sebelum klaim selesai)
+
+Perubahan dianggap selesai bila SEMUA terpenuhi:
+
+1. Tidak ada penanda utang baru (`TODO`, `FIXME`, `HACK`, `NotImplemented`,
+   halaman kosong, stub tanpa issue tercatat).
+2. Lolos gerbang verifikasi R2 untuk area yang disentuh.
+3. Bukti perilaku dilampirkan (R2): bukan hanya test hijau.
+4. `docs/CHECKPOINT.md` dan `docs/CARA-MENJALANKAN.md` dimutakhirkan bila
+   perilaku, perintah, atau angka test berubah.
 
 ## R1 — Object-Oriented Programming (OOP)
 
@@ -41,6 +57,24 @@ dipindah ke kelas.
 
 **1.9 Backend (PHP/Laravel).** Domain class, Action, Policy, Resource, Enum, Service. Tidak menambah
 fungsi global baru; bungkus dalam kelas.
+
+**1.10 Anti-prosedural (semua bahasa).** Dilarang menambah fungsi/konstanta lepas di luar kelas
+(`export function`/`export const` di `src/lib/`, fungsi top-level Dart di `lib/src/`,
+`function foo()` global PHP, skrip Astro yang berisi logika bisnis). Pengecualian: function component
+React dan hook UI (kontraknya JSX — isinya hanya render + delegasi ke kelas), entrypoint/wiring
+(`main.dart`, `layout.tsx`, route handler yang hanya memanggil Action), dan test/fixture/E2E helper
+yang dibungkus `class ...Test`/`class E2e*`. Konstanta konfigurasi tinggal di kelas pemiliknya
+(`static readonly`), bukan di file lepas.
+
+**1.11 Gerbang OOP per bahasa (cek sebelum commit).**
+
+| Area | Perintah gerbang | Lolos bila |
+|---|---|---|
+| Web `src/lib/` | `rg -n "^export (function|const)" src/lib/` kosong | tidak ada fungsi/konstanta lepas |
+| Web komponen | `rg -n "Math\.(round|max)|localeCompare|new Date\(\)" src/app src/components` ditelaah | tiap hit delegasi ke kelas `src/lib/` |
+| Mobile `lib/src/` | `flutter analyze` 0 issue + `rg -n "EdgeInsets\.|SizedBox\(|Color\(0x" lib/src/screens lib/src/widgets` kosong | state di controller, visual dari token |
+| API `app/` | `./vendor/bin/pint --test` + `rg -n "^function " app/` kosong | tanpa fungsi global baru |
+| Astro `src/` | logika di `src/lib/*.ts` class | halaman `.astro` hanya render |
 
 ## R2 — Verifikasi sebelum selesai
 

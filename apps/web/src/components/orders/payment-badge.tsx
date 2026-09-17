@@ -1,16 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import type { PaymentStatus } from "@/lib/api/types";
 import { PaymentPolicy } from "@/lib/payment-policy";
-
-const styles: Record<PaymentStatus, string> = {
-  paid: "border-emerald-200 bg-emerald-100 text-emerald-800",
-  partial: "border-amber-200 bg-amber-100 text-amber-800",
-  unpaid: "border-red-200 bg-red-50 text-red-700",
-};
+import { StatusTones } from "@/lib/status-tones";
 
 export function PaymentBadge({ status }: { status: PaymentStatus }) {
   return (
-    <Badge variant="outline" className={styles[status]}>
+    <Badge variant="outline" className={StatusTones.paymentTone(status)}>
       {PaymentPolicy.label(status)}
     </Badge>
   );

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  Mappers,
-  type WireDashboard,
-  type WireOrder,
-  type WireReport,
-  type WireUser,
-} from "@/lib/api/laravel/mappers";
+import { Mappers } from "@/lib/api/laravel/mappers";
+import type {
+  WireDashboard,
+  WireOrder,
+  WireReport,
+  WireUser,
+} from "@/lib/api/laravel/wire-types";
 
 const wireUser: WireUser = {
   id: 7,

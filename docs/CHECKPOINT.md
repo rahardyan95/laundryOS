@@ -74,12 +74,12 @@ Dijalankan dari root kecuali disebut lain; jalankan **semua** sebelum menyatakan
 
 | Gate | Perintah | Hasil terakhir |
 |---|---|---|
-| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **141 passed, 484 assertions** |
+| Backend test | `cd infra && docker compose run --rm -T api php artisan test` | **145 passed, 508 assertions** (2026-09-17, komit 64c6aef) |
 | Backend gaya | `… php vendor/bin/pint --test` | PASS, 171 file |
 | Backend analisis | `… composer analyse` (Larastan L5) | 0 error |
 | Coverage | `… composer test:coverage` | 92,3% (gate 90) |
 | Web tipe/lint | `pnpm --filter web exec tsc --noEmit` · `pnpm --filter web exec eslint src` | 0 · 0 |
-| Web unit | `pnpm --filter web exec vitest run` | 51 passed |
+| Web unit | `pnpm --filter web exec vitest run` | 62 passed (2026-09-17, komit 64c6aef) |
 | Web build | `pnpm --filter web build` | exit 0 |
 | Web E2E mock | `pnpm --filter web test:e2e` | 19 passed |
 | Web E2E API nyata | `pnpm --filter web test:e2e:laravel` | 2 passed |
@@ -195,6 +195,7 @@ Invarian yang mudah dilanggar (pernah menjadi bug):
 | Login web produksi "tidak terjadi apa-apa" | `SESSION_SECURE_COOKIE=true` tapi belum ada HTTPS | selesaikan TLS dulu (`DEPLOY.md` §5) |
 | `pnpm install --frozen-lockfile` gagal setelah menambah dependency | `pnpm-lock.yaml` root belum diperbarui | jalankan `pnpm install` di root, commit lockfile-nya |
 | Worker produksi tidak memakai image baru | `worker`/`scheduler` memakai `${API_IMAGE:-…}` | deploy lewat `deploy-prod.sh` supaya semua service ikut tag yang sama |
+| `exec /entrypoint.sh: no such file or directory`, api/worker/scheduler `Exited (255)` di klon Windows | skrip `infra/*.sh` ber-line-ending CRLF (`core.autocrlf=true`) | konversi ke LF + kunci via `.gitattributes` (`*.sh text eol=lf`); diverifikasi live 2026-09-17 |
 
 ---
 
@@ -241,6 +242,7 @@ rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
 
 | Tanggal | Catatan | Hasil inti |
 |---|---|---|
+| 2026-09-17 | OOP enforcement + Docker live + refaktor penuh web/mobile | backend 145/508 · pint 172 · tsc 0 · eslint 0 · vitest 62/62 · next build exit 0 · E2E mock 20 (1 skip) + laravel 2 · mobile analyze 0 + test 81 · 7/7 container Up · login owner + Order Baru diverifikasi browser |
 | 2026-09-14 | Audit go-live + tiga batch perbaikan | 141 test backend · pint 171 file · phpstan 0 · coverage 92,3% · web 51 unit + 19/2 E2E · mobile 0 issue + 81 test · apk debug |
 | 2026-09-14 | Integrasi web↔mobile + UI mobile baru | login cookie httpOnly, `/orders` dari PostgreSQL, kurir melihat tugas nyata; cacat CORS, `_TypeError` typed collection, dan locale `id_ID` ditemukan lewat menjalankan aplikasi (bukan test) |
 | 2026-09-13 | Plan produksi M0–M9 | backend 121 test · web 51 unit + 18 E2E mock + 2 E2E Laravel · Flutter 25 test · coverage 92,2% |

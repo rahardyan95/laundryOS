@@ -1,6 +1,7 @@
 import "package:flutter/foundation.dart";
 
 import "../api/api_exception.dart";
+import "../api/network_exception.dart";
 import "../api/mutation_queue.dart";
 import "../api/offline_cache.dart";
 import "../models/session.dart";
@@ -32,10 +33,14 @@ class AuthController extends ChangeNotifier {
 
   AuthStatus _status = AuthStatus.unknown;
   SessionPayload? _session;
+  bool _busy = false;
+  String? _error;
 
   AuthStatus get status => _status;
   SessionPayload? get session => _session;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get busy => _busy;
+  String? get error => _error;
 
   /// Platform yang dilaporkan ke server saat mendaftarkan token perangkat.
   static String platformFor(TargetPlatform target) =>
@@ -59,11 +64,27 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> login(String email, String password) async {
-    _session = await _repository.login(email, password);
-    _status = AuthStatus.authenticated;
+  Future<bool> login(String email, String password) async {
+    _busy = true;
+    _error = null;
     notifyListeners();
-    await _registerPushToken();
+    try {
+      _session = await _repository.login(email, password);
+      _status = AuthStatus.authenticated;
+      notifyListeners();
+      await _registerPushToken();
+      return true;
+    } on ApiException catch (error) {
+      _error = error.message;
+    } on NetworkException catch (error) {
+      _error = error.message;
+    } catch (_) {
+      _error = "Tidak dapat masuk. Coba lagi.";
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
+    return false;
   }
 
   Future<void> logout() async {

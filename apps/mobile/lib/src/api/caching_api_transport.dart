@@ -1,5 +1,6 @@
-import "api_exception.dart";
+import "network_exception.dart";
 import "api_transport.dart";
+import "cache_codec.dart";
 import "offline_cache.dart";
 import "upload_file.dart";
 

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { loginAsOwner } from "./helpers";
+import { E2eAuth } from "./helpers";
 
 test("login owner, buat order, lanjut status, logout", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByRole("heading", { name: /Selamat (pagi|siang|sore|malam)/ })).toBeVisible();
   await expect(page.getByText("order dibuat hari ini")).toBeVisible();

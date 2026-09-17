@@ -1,3 +1,6 @@
+import "ready_waiting_item.dart";
+import "workload_item.dart";
+
 class DashboardSummary {
   const DashboardSummary({
     required this.ordersToday,
@@ -29,36 +32,5 @@ class DashboardSummary {
             .whereType<Map<String, dynamic>>()
             .map(ReadyWaitingItem.fromJson)
             .toList(),
-      );
-}
-
-class WorkloadItem {
-  const WorkloadItem({required this.status, required this.count});
-
-  final String status;
-  final int count;
-
-  factory WorkloadItem.fromJson(Map<String, dynamic> json) => WorkloadItem(
-        status: json["status"] as String? ?? "-",
-        count: (json["count"] as num?)?.toInt() ?? 0,
-      );
-}
-
-class ReadyWaitingItem {
-  const ReadyWaitingItem({
-    required this.ticket,
-    required this.customerName,
-    required this.hoursWaiting,
-  });
-
-  final String ticket;
-  final String customerName;
-  final int hoursWaiting;
-
-  factory ReadyWaitingItem.fromJson(Map<String, dynamic> json) =>
-      ReadyWaitingItem(
-        ticket: json["ticket"] as String? ?? "-",
-        customerName: json["customer_name"] as String? ?? "-",
-        hoursWaiting: (json["hours_waiting"] as num?)?.toInt() ?? 0,
       );
 }

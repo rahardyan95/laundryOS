@@ -11,6 +11,7 @@ import { useOutlet } from "@/components/layout/outlet-context";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/api-error";
 import type { DashboardSummary } from "@/lib/api/types";
+import { DashboardPolicy } from "@/lib/dashboard-policy";
 import { Format } from "@/lib/format";
 import { SessionManager } from "@/lib/api/session";
 
@@ -65,23 +66,17 @@ export default function DashboardPage() {
     );
   }
 
-  const cards = [
-    { title: "Order Hari Ini", value: String(summary.ordersToday), hint: "order dibuat hari ini" },
-    { title: "Omzet Hari Ini", value: Format.rupiah(summary.salesToday), hint: "total order hari ini" },
-    { title: "Piutang", value: Format.rupiah(summary.outstanding), hint: "belum lunas, semua order aktif" },
-    { title: "Saldo Kas", value: Format.rupiah(summary.cashBalance), hint: "kas outlet saat ini" },
-  ];
+  const cards = DashboardPolicy.cards(summary);
   const session = SessionManager.get();
-  const firstName = session?.user.name.split(" ")[0] ?? "";
-  const outletName =
-    session?.outlets.find((o) => o.id === outletId)?.name ?? "";
-  const maxWorkload = Math.max(1, ...summary.workload.map((row) => row.count));
+  const firstName = DashboardPolicy.firstName(session);
+  const outletName = DashboardPolicy.outletName(session, outletId);
+  const maxWorkload = DashboardPolicy.maxWorkload(summary);
 
   return (
     <div className="space-y-4">
       <div className="animate-enter">
         <p className="text-sm font-medium text-muted-foreground">
-          {Format.date(new Date().toISOString())}
+          {DashboardPolicy.todayLabel(new Date().toISOString())}
           {outletName ? ` · ${outletName}` : ""}
         </p>
         <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight">
@@ -117,7 +112,7 @@ export default function DashboardPage() {
           <CardContent>
             <ol className="grid grid-cols-3 gap-2 sm:grid-cols-6">
               {summary.workload.map((row) => {
-                const isPeak = row.count > 0 && row.count === maxWorkload;
+                const isPeak = DashboardPolicy.isPeak(row.count, maxWorkload);
                 return (
                   <li
                     key={row.status}
@@ -137,7 +132,7 @@ export default function DashboardPage() {
                     >
                       <span
                         className={`block h-full rounded-full ${isPeak ? "bg-amber-500" : "bg-primary"}`}
-                        style={{ width: `${Math.round((row.count / maxWorkload) * 100)}%` }}
+                        style={{ width: `${DashboardPolicy.barPercent(row.count, maxWorkload)}%` }}
                       />
                     </span>
                     {isPeak ? (

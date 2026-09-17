@@ -1,6 +1,8 @@
 import "../api/api_client.dart";
 import "../api/api_exception.dart";
 import "../models/delivery_task.dart";
+import "../models/delivery_task_page.dart";
+import "../models/delivery_task_status.dart";
 
 class DeliveryTaskRepository {
   DeliveryTaskRepository(this._api, this._tokenProvider);

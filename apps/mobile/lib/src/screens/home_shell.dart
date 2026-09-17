@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
+import "../domain/home_tabs_policy.dart";
 import "../models/role.dart";
 import "../state/auth_controller.dart";
 import "../widgets/connectivity_banner.dart";
@@ -27,7 +28,7 @@ class _HomeShellState extends State<HomeShell> {
     final role = context.select<AuthController, Role>(
       (auth) => auth.session?.role ?? Role.cashier,
     );
-    final tabs = _tabsFor(role);
+    final tabs = HomeTabsPolicy.tabsFor(role).map(_Tab.fromKind).toList();
     final index = _index.clamp(0, tabs.length - 1);
 
     return Scaffold(
@@ -67,32 +68,23 @@ class _HomeShellState extends State<HomeShell> {
       ),
     );
   }
-
-  List<_Tab> _tabsFor(Role role) {
-    const notifications =
-        _Tab(Icons.notifications_outlined, "Notifikasi", NotificationsScreen());
-    if (role.isDriver) {
-      return [
-        const _Tab(Icons.local_shipping_outlined, "Tugas", TasksScreen()),
-        notifications,
-      ];
-    }
-    if (role.canViewDashboard) {
-      return [
-        const _Tab(Icons.dashboard_outlined, "Dashboard", DashboardScreen()),
-        const _Tab(Icons.receipt_long_outlined, "Order", OrdersScreen()),
-        notifications,
-      ];
-    }
-    return [
-      const _Tab(Icons.receipt_long_outlined, "Order", OrdersScreen()),
-      notifications,
-    ];
-  }
 }
 
 class _Tab {
   const _Tab(this.icon, this.label, this.screen);
+
+  factory _Tab.fromKind(HomeTabKind kind) {
+    return switch (kind) {
+      HomeTabKind.dashboard => const _Tab(
+          Icons.dashboard_outlined, "Dashboard", DashboardScreen()),
+      HomeTabKind.orders => const _Tab(
+          Icons.receipt_long_outlined, "Order", OrdersScreen()),
+      HomeTabKind.tasks => const _Tab(
+          Icons.local_shipping_outlined, "Tugas", TasksScreen()),
+      HomeTabKind.notifications => const _Tab(
+          Icons.notifications_outlined, "Notifikasi", NotificationsScreen()),
+    };
+  }
 
   final IconData icon;
   final String label;

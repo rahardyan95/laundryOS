@@ -1,10 +1,10 @@
 import "package:flutter/material.dart";
-import "package:image_picker/image_picker.dart";
 import "package:provider/provider.dart";
 
 import "../domain/format.dart";
 import "../domain/task_machine.dart";
 import "../models/delivery_task.dart";
+import "../models/delivery_task_status.dart";
 import "../state/delivery_task_controller.dart";
 import "../theme/app_metrics.dart";
 import "../theme/app_typography.dart";
@@ -81,16 +81,8 @@ class _TaskCard extends StatelessWidget {
   final DeliveryTaskController controller;
 
   Future<void> _uploadProof(BuildContext context) async {
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      imageQuality: 70,
-      maxWidth: 1600,
-    );
-    if (file == null) return;
-    final bytes = await file.readAsBytes();
-    final ok =
-        await controller.uploadProof(task, bytes: bytes, filename: file.name);
-    if (!context.mounted) return;
+    final ok = await controller.captureAndUploadProof(task);
+    if (ok == null || !context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(ok ? "Bukti terunggah." : "Gagal mengunggah bukti.")),
@@ -130,7 +122,8 @@ class _TaskCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(Icons.place_outlined,
-                  size: 18, color: theme.colorScheme.onSurfaceVariant),
+                  size: AppIconSizes.sm,
+                  color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                   child: Text(task.address, style: theme.textTheme.bodyMedium)),
@@ -140,7 +133,8 @@ class _TaskCard extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.schedule_outlined,
-                  size: 18, color: theme.colorScheme.onSurfaceVariant),
+                  size: AppIconSizes.sm,
+                  color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -155,7 +149,8 @@ class _TaskCard extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.photo_camera_outlined,
-                    size: 18, color: theme.colorScheme.onSurfaceVariant),
+                    size: AppIconSizes.sm,
+                    color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: AppSpacing.sm),
                 Text("Bukti terunggah", style: theme.textTheme.bodySmall),
               ],
@@ -169,7 +164,8 @@ class _TaskCard extends StatelessWidget {
                 if (task.status == DeliveryTaskStatus.inProgress)
                   TextButton.icon(
                     onPressed: () => _uploadProof(context),
-                    icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                    icon: const Icon(Icons.camera_alt_outlined,
+                        size: AppIconSizes.sm),
                     label: const Text("Bukti"),
                   ),
                 if (task.status == DeliveryTaskStatus.inProgress)
@@ -199,7 +195,8 @@ class _FieldHint extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline,
-              size: 18, color: theme.colorScheme.onSurfaceVariant),
+              size: AppIconSizes.sm,
+              color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

@@ -1,8 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:laundryos_mobile/src/api/api_exception.dart";
+import "package:laundryos_mobile/src/api/network_exception.dart";
 import "package:laundryos_mobile/src/api/api_transport.dart";
 import "package:laundryos_mobile/src/api/caching_api_transport.dart";
-import "package:laundryos_mobile/src/api/offline_cache.dart";
+import "package:laundryos_mobile/src/api/in_memory_offline_cache.dart";
 import "package:laundryos_mobile/src/api/upload_file.dart";
 
 import "support/fake_transport.dart";

@@ -3,8 +3,8 @@ import "package:flutter_test/flutter_test.dart";
 import "package:laundryos_mobile/src/domain/order_machine.dart";
 import "package:laundryos_mobile/src/domain/status_kind.dart";
 import "package:laundryos_mobile/src/domain/task_machine.dart";
-import "package:laundryos_mobile/src/models/delivery_task.dart";
-import "package:laundryos_mobile/src/models/order.dart";
+import "package:laundryos_mobile/src/models/delivery_task_status.dart";
+import "package:laundryos_mobile/src/models/order_status.dart";
 
 void main() {
   group("OrderMachine.kind", () {

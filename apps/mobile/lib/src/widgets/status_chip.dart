@@ -33,7 +33,7 @@ class StatusChip extends StatelessWidget {
         ?.copyWith(color: tone.foreground);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: AppSpacing.chip,
       decoration: BoxDecoration(
         color: outlined ? null : tone.background,
         borderRadius: AppRadii.chipBorder,

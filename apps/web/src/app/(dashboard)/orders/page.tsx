@@ -30,17 +30,12 @@ import { useOutlet } from "@/components/layout/outlet-context";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/api-error";
 import { SessionManager } from "@/lib/api/session";
-import type { Order, OrderStatus } from "@/lib/api/types";
+import type { Order } from "@/lib/api/types";
 import { Format } from "@/lib/format";
+import { NavPolicy } from "@/lib/nav-policy";
 import { OrderMachine } from "@/lib/order-machine";
 
-const statusOptions: { value: string; label: string }[] = [
-  { value: "all", label: "Semua status" },
-  ...OrderMachine.FLOW.concat("cancelled" as OrderStatus).map((status) => ({
-    value: status,
-    label: OrderMachine.label(status as OrderStatus),
-  })),
-];
+const statusOptions = OrderMachine.filterOptions();
 
 export default function OrdersPage() {
   const { outletId } = useOutlet();
@@ -74,22 +69,13 @@ export default function OrdersPage() {
     };
   }, [outletId]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return orders.filter((order) => {      if (statusFilter !== "all" && order.status !== statusFilter) return false;
-      if (
-        q &&
-        !order.ticket.toLowerCase().includes(q) &&
-        !order.customerName.toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [orders, statusFilter, query]);
+  const filtered = useMemo(
+    () => OrderMachine.visible(orders, statusFilter, query),
+    [orders, statusFilter, query]
+  );
 
   const role = SessionManager.get()?.user.role;
-  const canCreate = role === "owner" || role === "manager" || role === "cashier";
+  const canCreate = NavPolicy.canCreateOrder(role);
 
   return (
     <div className="space-y-4">

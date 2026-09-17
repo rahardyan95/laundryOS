@@ -2,11 +2,11 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../domain/format.dart";
+import "../domain/notification_machine.dart";
 import "../models/notification.dart";
 import "../state/notification_controller.dart";
 import "../theme/app_metrics.dart";
 import "../theme/app_status_tones.dart";
-import "../domain/status_kind.dart";
 import "../widgets/app_scaffold.dart";
 import "../widgets/async_section.dart";
 import "../widgets/empty_state.dart";
@@ -83,8 +83,8 @@ class _NotificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tone = StatusTones.of(context)
-        .tone(item.unread ? StatusKind.info : StatusKind.neutral);
+    final tone =
+        StatusTones.of(context).tone(NotificationMachine.kind(item.unread));
 
     return SurfaceCard(
       onTap: item.unread ? onTap : null,
@@ -92,15 +92,15 @@ class _NotificationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: AppAvatarSizes.notification,
+            height: AppAvatarSizes.notification,
             decoration:
                 BoxDecoration(color: tone.background, shape: BoxShape.circle),
             child: Icon(
               item.unread
                   ? Icons.notifications_active
                   : Icons.notifications_none,
-              size: 20,
+              size: AppIconSizes.md,
               color: tone.foreground,
             ),
           ),
@@ -117,7 +117,9 @@ class _NotificationCard extends StatelessWidget {
                     ),
                     if (item.unread) ...[
                       const SizedBox(width: AppSpacing.sm),
-                      const StatusChip(label: "Baru", kind: StatusKind.info),
+                      StatusChip(
+                          label: "Baru",
+                          kind: NotificationMachine.kind(true)),
                     ],
                   ],
                 ),

@@ -1,6 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:laundryos_mobile/src/domain/order_machine.dart";
-import "package:laundryos_mobile/src/models/order.dart";
+import "package:laundryos_mobile/src/models/order_status.dart";
 import "package:laundryos_mobile/src/models/role.dart";
 
 void main() {

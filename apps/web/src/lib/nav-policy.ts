@@ -63,4 +63,16 @@ export class NavPolicy {
     };
     return labels[role];
   }
+
+  static canCreateOrder(role: Role | undefined): boolean {
+    return role === "owner" || role === "manager" || role === "cashier";
+  }
+
+  static canSwitchOutlet(role: Role | undefined): boolean {
+    return role === "owner" || role === "manager";
+  }
+
+  static canManageCatalog(role: Role | undefined): boolean {
+    return role === "owner" || role === "manager";
+  }
 }

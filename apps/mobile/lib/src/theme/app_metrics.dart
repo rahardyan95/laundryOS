@@ -18,11 +18,60 @@ class AppSpacing {
   /// Jarak tepi standar layar. Bawah lebih lega karena ada NavigationBar.
   static const EdgeInsets screen = EdgeInsets.fromLTRB(lg, sm, lg, xxl);
 
-  /// Jarak di dalam kartu.
+/// Jarak di dalam kartu.
   static const EdgeInsets card = EdgeInsets.all(lg);
 
   /// Jarak antar kartu pada daftar.
   static const double listGap = md;
+
+  /// Isi lencana status: padat, bukan sasaran sentuh.
+  static const EdgeInsets chip =
+      EdgeInsets.symmetric(horizontal: 10, vertical: 5);
+
+  /// Isi pita konektivitas.
+  static const EdgeInsets banner =
+      EdgeInsets.symmetric(horizontal: md, vertical: 6);
+
+  /// Selisih label kecil di bawah judul seksi.
+  static const double labelGap = 2;
+}
+
+/// Ukuran ikon dan avatar. Ikon mengikuti tangga 2dp agar selaras dengan
+/// ketebalan garis dan radius (R1.4).
+class AppIconSizes {
+  const AppIconSizes._();
+
+  static const double xs = 16;
+  static const double sm = 18;
+  static const double md = 20;
+  static const double lg = 40;
+}
+
+/// Ukuran avatar lingkaran (mis. ikon notifikasi).
+class AppAvatarSizes {
+  const AppAvatarSizes._();
+
+  static const double notification = 36;
+}
+
+/// Ukuran marka merek.
+class AppBrandSizes {
+  const AppBrandSizes._();
+
+  /// Marka pada lockup layar masuk.
+  static const double lockupMark = 56;
+}
+
+/// Ukuran indikator loading kecil di dalam tombol.
+class AppLoaderSizes {
+  const AppLoaderSizes._();
+
+  static const double button = 18;
+  static const double stroke = 2;
+
+  /// Indikator blok memuat layar.
+  static const double block = 28;
+  static const double strokeWide = 2.5;
 }
 
 /// Radius dipakai untuk menunjukkan tingkat: kontrol < kartu < lembaran.

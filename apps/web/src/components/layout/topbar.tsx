@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "@/components/layout/notification-bell";
-import { api } from "@/lib/api/client";
 import type { SessionPayload } from "@/lib/api/types";
 import { Format } from "@/lib/format";
 import { NavPolicy } from "@/lib/nav-policy";
+import { SessionActions } from "@/lib/session-actions";
+import { SessionManager } from "@/lib/api/session";
 
 export function Topbar({
   session,
@@ -30,11 +31,11 @@ export function Topbar({
   onOutletChange: (id: string) => void;
 }) {
   const router = useRouter();
-  const canSwitch = session.user.role === "owner" || session.user.role === "manager";
-  const activeOutlet = session.outlets.find((o) => o.id === outletId) ?? session.outlets[0];
+  const canSwitch = NavPolicy.canSwitchOutlet(session.user.role);
+  const activeOutlet = SessionManager.activeOutlet(session, outletId);
 
   function handleLogout() {
-    void api.logout().finally(() => {
+    void SessionActions.logout().finally(() => {
       toast.success("Anda telah keluar.");
       router.replace("/login");
     });

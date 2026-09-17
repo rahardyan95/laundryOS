@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 
 import "api_exception.dart";
+import "network_exception.dart";
 import "api_transport.dart";
 import "upload_file.dart";
 

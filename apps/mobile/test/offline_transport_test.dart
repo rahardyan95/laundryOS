@@ -1,7 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:laundryos_mobile/src/api/api_exception.dart";
+import "package:laundryos_mobile/src/api/network_exception.dart";
+import "package:laundryos_mobile/src/api/queued_offline_exception.dart";
 import "package:laundryos_mobile/src/api/api_transport.dart";
-import "package:laundryos_mobile/src/api/mutation_queue.dart";
+import "package:laundryos_mobile/src/api/in_memory_mutation_queue.dart";
 import "package:laundryos_mobile/src/api/offline_api_transport.dart";
 
 import "support/fake_transport.dart";

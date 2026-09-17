@@ -1,3 +1,5 @@
+import { Clock } from "@/lib/clock";
+
 export class Format {
   static rupiah(value: number): string {
     return new Intl.NumberFormat("id-ID", {
@@ -34,11 +36,11 @@ export class Format {
   }
 
   static todayIso(): string {
-    return new Date().toISOString().slice(0, 10);
+    return Clock.nowIso().slice(0, 10);
   }
 
   static isoDaysAgo(days: number): string {
-    return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+    return Clock.daysAgoDate(days);
   }
 
   static initials(name: string): string {

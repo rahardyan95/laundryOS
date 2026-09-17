@@ -1,6 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:laundryos_mobile/src/domain/task_machine.dart";
+import "package:laundryos_mobile/src/models/delivery_task_status.dart";
 import "package:laundryos_mobile/src/models/delivery_task.dart";
+import "package:laundryos_mobile/src/models/delivery_task_type.dart";
 
 void main() {
   test("transisi task mengikuti alur", () {

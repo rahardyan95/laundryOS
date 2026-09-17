@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { loginAsOwner } from "./helpers";
+import { E2eAuth } from "./helpers";
 
 test("tombol tandai semua dibaca mengosongkan badge lonceng", async ({ page }) => {
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
 
   await page.getByRole("button", { name: "Notifikasi" }).click();

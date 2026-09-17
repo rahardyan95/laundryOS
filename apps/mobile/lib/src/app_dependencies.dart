@@ -6,6 +6,8 @@ import "api/mutation_queue.dart";
 import "api/offline_api_transport.dart";
 import "api/offline_cache.dart";
 import "api/session_store.dart";
+import "api/shared_prefs_mutation_queue.dart";
+import "api/shared_prefs_offline_cache.dart";
 import "config/app_config.dart";
 import "push/push_registrar.dart";
 import "repositories/auth_repository.dart";

@@ -28,6 +28,7 @@ import type {
   Service,
 } from "@/lib/api/types";
 import { Format } from "@/lib/format";
+import { OrderPricing } from "@/lib/order-pricing";
 import { PaymentPolicy } from "@/lib/payment-policy";
 import { SessionManager } from "@/lib/api/session";
 
@@ -82,25 +83,11 @@ export default function NewOrderPage() {
     };
   }, []);
 
-  const pricedItems = useMemo(
-    () =>
-      items.map((draft) => {
-        const service = services.find((s) => s.id === draft.serviceId);
-        const qty = Number(draft.qty);
-        const validQty = Number.isFinite(qty) && qty > 0 ? qty : 0;
-        return {
-          ...draft,
-          service,
-          qty: validQty,
-          subtotal: service ? Math.round(validQty * service.pricePerUnit) : 0,
-        };
-      }),
-    [items, services]
-  );
+  const pricedItems = useMemo(() => OrderPricing.priceAll(items, services), [items, services]);
 
-  const total = pricedItems.reduce((sum, item) => sum + item.subtotal, 0);
-  const paid = Number(paidAmount) || 0;
-  const payLabel = PaymentPolicy.label(PaymentPolicy.status(paid, total));
+  const total = OrderPricing.total(pricedItems);
+  const { paid, status: paymentStatus } = OrderPricing.status(paidAmount, total);
+  const payLabel = PaymentPolicy.label(paymentStatus);
 
   function updateItem(key: number, patch: Partial<ItemDraft>) {
     setItems((prev) => prev.map((item) => (item.key === key ? { ...item, ...patch } : item)));
@@ -166,7 +153,7 @@ export default function NewOrderPage() {
           pickupRequested: false,
           deliveryRequested: false,
           paymentMethod,
-          paymentStatus: paid >= total ? "paid" : paid > 0 ? "partial" : "unpaid",
+          paymentStatus,
           paidAmount: paid,
         },
         session.user

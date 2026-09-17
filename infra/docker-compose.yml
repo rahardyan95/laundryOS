@@ -10,6 +10,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./pgsql-init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U laundry -d laundry"]
       interval: 5s
@@ -20,9 +21,18 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   mailpit:
     image: axllent/mailpit
+    restart: unless-stopped
     ports:
       - "8025:8025"
       - "1025:1025"
@@ -54,11 +64,18 @@ services:
       FRONTEND_URL: http://localhost:3000
       CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3100
       SANCTUM_STATEFUL_DOMAINS: localhost:3000,localhost:3100,127.0.0.1:3000,127.0.0.1:3100
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan up 2>/dev/null | grep -qi 'application is up' || wget -qO- http://localhost:8000/up >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     depends_on:
       pgsql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
 
   worker:
@@ -83,11 +100,12 @@ services:
       FRONTEND_URL: http://localhost:3000
       CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3100
       SANCTUM_STATEFUL_DOMAINS: localhost:3000,localhost:3100,127.0.0.1:3000,127.0.0.1:3100
+    restart: unless-stopped
     depends_on:
       pgsql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     entrypoint: ["/entrypoint.sh"]
     command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3"]
 
@@ -109,11 +127,12 @@ services:
       FRONTEND_URL: http://localhost:3000
       CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3100
       SANCTUM_STATEFUL_DOMAINS: localhost:3000,localhost:3100,127.0.0.1:3000,127.0.0.1:3100
+    restart: unless-stopped
     depends_on:
       pgsql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     entrypoint: ["/entrypoint.sh"]
     command: ["php", "artisan", "schedule:work"]
 
@@ -142,5 +161,6 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
   web-node-modules:
   web-next:

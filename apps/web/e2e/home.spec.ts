@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAsOwner } from "./helpers";
+import { E2eAuth } from "./helpers";
 
 test("home memuat navigasi dan CTA berfungsi", async ({ page }) => {
   const errors: string[] = [];
@@ -40,7 +40,7 @@ test("home full-load saat login tanpa hydration error", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
 
   await page.goto("/");

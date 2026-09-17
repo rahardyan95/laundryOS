@@ -154,16 +154,11 @@ Login owner → Dashboard KPI DB nyata (`Piutang Rp98.000`, `Kas masuk Rp177.700
 
 ## 5. Sisa tugas
 
-### T1 — Seed data demo untuk kurir & kas (belum)
+### T1 — Seed data demo untuk kurir & kas (SELESAI 2026-09-17, diverifikasi live)
 
-**Files:** modify `apps/api/database/seeders/DatabaseSeeder.php`
-**Kenapa:** tanpa ini, instalasi bersih menampilkan tab Tugas/Kas kosong sehingga peran kurir & kasir tidak bisa dinilai.
-
-- [ ] Tambah `delivery_tasks` untuk `outlet Kemang` & `tebet` dengan driver `kurir@laundryos.test` (status `pending`/`assigned`/`done`).
-- [ ] Tambah `cash_entries` (masuk/keluar) + satu `cash_closings` terkunci pada tanggal lampau.
-- [ ] Verifikasi: `docker compose run --rm -T api php artisan migrate:fresh --seed` lalu
-      `psql -c "select count(*) from delivery_tasks"` > 0 dan `flutter run` menampilkan kartu tugas.
-- [ ] Jalankan ulang gate §4.3 (backend) karena fixture test memakai factory, bukan seeder.
+- [x] `delivery_tasks` untuk `kurir@laundryos.test` — ada di `DatabaseSeeder.php:232-270`.
+- [x] `cash_entries` + satu `cash_closings` terkunci — ada di `DatabaseSeeder.php:179-230`.
+- [x] Verifikasi live: `migrate:fresh --seed` + login owner `http://localhost:3000` → dashboard "Selamat malam, Budi!".
 
 ### T2 — Push FCM native (butuh kredensial Google)
 Backend siap (`/auth/device-token` + `PushNotifier`); mobile perlu `firebase_messaging` + `google-services.json`.
@@ -182,9 +177,11 @@ Tambahkan langkah pembersihan/ caching `.dart_tool/hooks_runner` di `.github/wor
 ```bash
 cd infra
 docker compose up -d
-docker compose ps                                   # 6/6 Up
-docker compose run --rm -T api php artisan migrate --force
+docker compose ps                                   # 7/7 Up (2026-09-17: api/worker/scheduler sempat crash CRLF entrypoint, diperbaiki + .gitattributes eol=lf)
+docker compose exec -T api php artisan migrate --force
 ```
+
+> Klon Windows: skrip `infra/*.sh` wajib LF (dijaga `.gitattributes`). Gejala CRLF: `exec /entrypoint.sh: no such file or directory`, service api/worker/scheduler `Exited (255)`.
 
 - API: http://localhost:8000/api/v1/health · Mailpit: http://localhost:8025
 - Akun demo (password `password`): `owner@` `manager@` `kasir@` `operator@` `kurir@laundryos.test`

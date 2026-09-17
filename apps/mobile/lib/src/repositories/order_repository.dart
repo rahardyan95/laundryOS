@@ -1,6 +1,8 @@
 import "../api/api_client.dart";
 import "../api/api_exception.dart";
 import "../models/order.dart";
+import "../models/order_page.dart";
+import "../models/order_status.dart";
 
 class OrderRepository {
   OrderRepository(this._api, this._tokenProvider);

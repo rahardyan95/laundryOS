@@ -2,7 +2,8 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../domain/format.dart";
-import "../models/catalog.dart";
+import "../domain/order_draft.dart";
+import "../models/service.dart";
 import "../state/auth_controller.dart";
 import "../state/catalog_controller.dart";
 import "../state/order_controller.dart";
@@ -53,41 +54,32 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
   }
 
   Service? _selectedService(CatalogController catalog) {
-    if (_serviceId == null) return null;
-    for (final service in catalog.services) {
-      if (service.id == _serviceId) return service;
-    }
-    return null;
+    return OrderDraft.findService(catalog.services, _serviceId);
   }
 
   int _total(CatalogController catalog) {
     final service = _selectedService(catalog);
-    final qty = double.tryParse(_qty.text.replaceAll(",", ".")) ?? 0;
-    if (service == null) return 0;
-    return (qty * service.pricePerUnit).round();
+    return OrderDraft.total(service, OrderDraft.parseQty(_qty.text));
   }
 
   Future<void> _submit() async {
     final catalog = context.read<CatalogController>();
     final session = context.read<AuthController>().session;
-    final total = _total(catalog);
+    final service = _selectedService(catalog);
+    final qty = OrderDraft.parseQty(_qty.text);
+    final total = OrderDraft.total(service, qty);
     final paid = int.tryParse(_paid.text) ?? 0;
-    final qty = double.tryParse(_qty.text.replaceAll(",", ".")) ?? 0;
 
-    if (session == null) {
-      setState(() => _error = "Sesi berakhir. Masuk kembali.");
-      return;
-    }
-    if (_customerId == null) {
-      setState(() => _error = "Pilih pelanggan.");
-      return;
-    }
-    if (_serviceId == null || qty <= 0) {
-      setState(() => _error = "Pilih layanan dan jumlah yang benar.");
-      return;
-    }
-    if (paid < 0 || paid > total) {
-      setState(() => _error = "Nominal dibayar harus antara Rp0 dan total.");
+    final validation = OrderDraft.validate(
+      hasSession: session != null,
+      customerId: _customerId,
+      serviceId: _serviceId,
+      qty: qty,
+      paid: paid,
+      total: total,
+    );
+    if (validation != null) {
+      setState(() => _error = validation);
       return;
     }
 
@@ -96,7 +88,7 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
       _error = null;
     });
     final created = await context.read<OrderController>().create(
-          outletId: session.outletId,
+          outletId: session!.outletId,
           customerId: _customerId!,
           items: [(serviceId: _serviceId!, qty: qty)],
           paidAmount: paid,
@@ -248,9 +240,10 @@ class _NewOrderScreenState extends State<NewOrderScreen> {
                   onPressed: _saving ? null : _submit,
                   child: _saving
                       ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          height: AppLoaderSizes.button,
+                          width: AppLoaderSizes.button,
+                          child: CircularProgressIndicator(
+                              strokeWidth: AppLoaderSizes.stroke),
                         )
                       : const Text("Simpan Order"),
                 ),

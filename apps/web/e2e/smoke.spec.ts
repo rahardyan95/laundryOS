@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAsOwner } from "./helpers";
+import { E2eAuth } from "./helpers";
 
 const pages = [
   ["/dashboard", /Selamat (pagi|siang|sore|malam)/],
@@ -18,7 +18,7 @@ test("semua halaman utama tanpa console error", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
 
   for (const [path, heading] of pages) {
@@ -40,7 +40,7 @@ test("tampilan mobile 390px tanpa scroll horizontal", async ({ page }) => {
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await loginAsOwner(page);
+  await E2eAuth.loginAsOwner(page);
   await expect(page).toHaveURL(/\/dashboard/);
   await expect(page.getByText("order dibuat hari ini")).toBeVisible();
   await page.screenshot({ path: "e2e/screenshots/dashboard-mobile.png" });

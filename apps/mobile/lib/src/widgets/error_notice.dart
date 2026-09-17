@@ -34,7 +34,8 @@ class ErrorNotice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error_outline, size: 20, color: tone.foreground),
+          Icon(Icons.error_outline,
+              size: AppIconSizes.md, color: tone.foreground),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

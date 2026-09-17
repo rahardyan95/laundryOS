@@ -1,19 +1,4 @@
-enum OrderStatus {
-  received,
-  washing,
-  drying,
-  ironing,
-  ready,
-  completed,
-  cancelled;
-
-  static OrderStatus fromWire(String value) {
-    return OrderStatus.values.firstWhere(
-      (status) => status.name == value,
-      orElse: () => OrderStatus.received,
-    );
-  }
-}
+import "order_status.dart";
 
 class Order {
   const Order({
@@ -49,30 +34,5 @@ class Order {
       paidAmount: (json["paid_amount"] as num?)?.toInt() ?? 0,
       paymentStatus: json["payment_status"] as String? ?? "unpaid",
     );
-  }
-}
-
-class OrderPage {
-  const OrderPage(
-      {required this.orders,
-      required this.currentPage,
-      required this.lastPage});
-
-  final List<Order> orders;
-  final int currentPage;
-  final int lastPage;
-
-  bool get hasMore => currentPage < lastPage;
-
-  factory OrderPage.fromEnvelope(Map<String, dynamic> body) {
-    final data = (body["data"] as List? ?? const [])
-        .whereType<Map<String, dynamic>>()
-        .map(Order.fromJson)
-        .toList();
-    final meta = body["meta"];
-    final current =
-        meta is Map ? (meta["current_page"] as num?)?.toInt() ?? 1 : 1;
-    final last = meta is Map ? (meta["last_page"] as num?)?.toInt() ?? 1 : 1;
-    return OrderPage(orders: data, currentPage: current, lastPage: last);
   }
 }

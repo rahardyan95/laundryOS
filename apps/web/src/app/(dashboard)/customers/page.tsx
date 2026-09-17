@@ -29,13 +29,9 @@ import { PageHeader } from "@/components/shared/page-header";
 import { useOutlet } from "@/components/layout/outlet-context";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/api-error";
-import type { Customer, Order } from "@/lib/api/types";
+import type { Customer } from "@/lib/api/types";
+import { CustomerInsights, type CustomerRow } from "@/lib/customer-insights";
 import { Format } from "@/lib/format";
-
-interface CustomerRow extends Customer {
-  orderCount: number;
-  lastOrderAt: string | null;
-}
 
 export default function CustomersPage() {
   const { outletId } = useOutlet();
@@ -57,26 +53,7 @@ export default function CustomersPage() {
     Promise.all([api.listCustomers(), api.listOrders({ outletId })])
       .then(([customers, orders]) => {
         if (cancelled) return;
-        const byCustomer = new Map<string, Order[]>();
-        for (const order of orders) {
-          const list = byCustomer.get(order.customerId) ?? [];
-          list.push(order);
-          byCustomer.set(order.customerId, list);
-        }
-        setRows(
-          customers
-            .filter((c) => c.outletId === outletId)
-            .map((customer) => {
-              const history = (byCustomer.get(customer.id) ?? []).sort((a, b) =>
-                b.createdAt.localeCompare(a.createdAt)
-              );
-              return {
-                ...customer,
-                orderCount: history.length,
-                lastOrderAt: history[0]?.createdAt ?? null,
-              };
-            })
-        );
+        setRows(CustomerInsights.summarize(customers, orders, outletId));
       })
       .catch((err) => {
         if (!cancelled)
@@ -90,13 +67,7 @@ export default function CustomersPage() {
     };
   }, [outletId]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter(
-      (row) => row.name.toLowerCase().includes(q) || row.phone.includes(q)
-    );
-  }, [rows, query]);
+  const filtered = useMemo(() => CustomerInsights.search(rows, query), [rows, query]);
 
   function openCreate() {
     setEditing(null);

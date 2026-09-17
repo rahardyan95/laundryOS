@@ -1,6 +1,7 @@
 import "package:flutter/foundation.dart";
 
 import "../models/catalog.dart";
+import "../models/service.dart";
 import "../repositories/catalog_repository.dart";
 
 class CatalogController extends ChangeNotifier {

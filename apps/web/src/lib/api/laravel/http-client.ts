@@ -1,15 +1,8 @@
 import { ApiError } from "@/lib/api/api-error";
 
-export const UNAUTHORIZED_EVENT = "laundryos:unauthorized";
-
-interface Paginated<T> {
-  data: T[];
-  meta?: { current_page: number; last_page: number };
-  current_page?: number;
-  last_page?: number;
-}
-
 export class HttpClient {
+  static readonly UNAUTHORIZED_EVENT = "laundryos:unauthorized";
+
   private readonly baseUrl: string;
   private readonly origin: string;
 
@@ -106,7 +99,7 @@ export class HttpClient {
     let page = 1;
 
     for (;;) {
-      const res = await this.get<Paginated<T>>(path, { ...params, page });
+      const res = await this.get<_PrivatePaginated<T>>(path, { ...params, page });
       all.push(...res.data);
       const current = res.meta?.current_page ?? res.current_page ?? 1;
       const last = res.meta?.last_page ?? res.last_page ?? 1;
@@ -177,7 +170,7 @@ export class HttpClient {
 
   private static notifyUnauthorized(status: number): void {
     if (status === 401 && typeof window !== "undefined") {
-      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+      window.dispatchEvent(new Event(HttpClient.UNAUTHORIZED_EVENT));
     }
   }
 
@@ -191,4 +184,11 @@ export class HttpClient {
 
     return `Permintaan gagal (${response.status}).`;
   }
+}
+
+interface _PrivatePaginated<T> {
+  data: T[];
+  meta?: { current_page: number; last_page: number };
+  current_page?: number;
+  last_page?: number;
 }

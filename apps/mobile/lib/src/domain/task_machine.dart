@@ -1,4 +1,5 @@
-import "../models/delivery_task.dart";
+import "../models/delivery_task_status.dart";
+import "../models/delivery_task_type.dart";
 import "status_kind.dart";
 
 class TaskMachine {

@@ -11,9 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { api } from "@/lib/api/client";
 import type { AppNotification } from "@/lib/api/types";
 import { Format } from "@/lib/format";
+import { NotificationController } from "@/lib/notification-controller";
 
 export function NotificationBell() {
   const [unread, setUnread] = useState(0);
@@ -21,61 +21,44 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
 
   const refresh = useCallback(() => {
-    api
-      .getUnreadCount()
-      .then(setUnread)
-      .catch(() => {});
+    void NotificationController.unreadCount().then(setUnread);
   }, []);
 
   useEffect(() => {
     refresh();
-    const timer = setInterval(refresh, 60000);
+    const timer = setInterval(refresh, NotificationController.pollIntervalMs);
     return () => clearInterval(timer);
   }, [refresh]);
 
   async function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
-      try {
-        setItems(await api.listNotifications());
-      } catch {
-        // abaikan: dropdown tetap bisa dibuka
-      }
+      setItems(await NotificationController.list());
     }
   }
 
   async function handleRead(item: AppNotification) {
     if (item.readAt) return;
-    try {
-      await api.markNotificationRead(item.id);
-      setItems((prev) =>
-        prev.map((n) => (n.id === item.id ? { ...n, readAt: new Date().toISOString() } : n))
-      );
-      refresh();
-    } catch {
-      // abaikan: hitung ulang saat refresh berikutnya
-    }
+    const updated = await NotificationController.markRead(item);
+    setItems((prev) => prev.map((n) => (n.id === item.id ? updated : n)));
+    refresh();
   }
 
   async function handleReadAll() {
-    try {
-      await api.markAllNotificationsRead();
-      const now = new Date().toISOString();
-      setItems((prev) => prev.map((n) => (n.readAt ? n : { ...n, readAt: now })));
-      setUnread(0);
-    } catch {
-      // abaikan: hitung ulang saat refresh berikutnya
-    }
+    setItems(await NotificationController.markAllRead(items));
+    setUnread(0);
   }
+
+  const badge = NotificationController.badge(unread);
 
   return (
     <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Notifikasi" className="relative">
           <Bell className="size-4" aria-hidden />
-          {unread > 0 ? (
+          {badge ? (
             <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-              {unread > 9 ? "9+" : unread}
+              {badge}
             </span>
           ) : null}
         </Button>
@@ -95,7 +78,7 @@ export function NotificationBell() {
             Tidak ada notifikasi.
           </p>
         ) : (
-          items.slice(0, 8).map((item) => (
+          items.slice(0, NotificationController.maxShown).map((item) => (
             <DropdownMenuItem
               key={item.id}
               onClick={() => handleRead(item)}

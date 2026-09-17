@@ -1,22 +1,22 @@
 import { ApiClient } from "@/lib/api/api-client";
 import { ApiError } from "@/lib/api/api-error";
 import { HttpClient } from "@/lib/api/laravel/http-client";
-import {
-  Mappers,
-  type WireAppNotification,
-  type WireCash,
-  type WireCashSummary,
-  type WireCustomer,
-  type WireDashboard,
-  type WireOrder,
-  type WireOutlet,
-  type WireReport,
-  type WireService,
-  type WireSubscription,
-  type WireTask,
-  type WireTenant,
-  type WireUser,
-} from "@/lib/api/laravel/mappers";
+import { Mappers } from "@/lib/api/laravel/mappers";
+import type {
+  WireAppNotification,
+  WireCash,
+  WireCashSummary,
+  WireCustomer,
+  WireDashboard,
+  WireOrder,
+  WireOutlet,
+  WireReport,
+  WireService,
+  WireSubscription,
+  WireTask,
+  WireTenant,
+  WireUser,
+} from "@/lib/api/laravel/wire-types";
 import type {
   AppNotification,
   CashEntry,

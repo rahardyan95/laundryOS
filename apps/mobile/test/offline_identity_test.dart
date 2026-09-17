@@ -1,12 +1,15 @@
 import "package:flutter_test/flutter_test.dart";
 
 import "package:laundryos_mobile/src/api/api_client.dart";
-import "package:laundryos_mobile/src/api/api_exception.dart";
+import "package:laundryos_mobile/src/api/network_exception.dart";
+import "package:laundryos_mobile/src/api/queued_offline_exception.dart";
 import "package:laundryos_mobile/src/api/api_transport.dart";
 import "package:laundryos_mobile/src/api/caching_api_transport.dart";
+import "package:laundryos_mobile/src/api/in_memory_mutation_queue.dart";
 import "package:laundryos_mobile/src/api/mutation_queue.dart";
+import "package:laundryos_mobile/src/api/pending_mutation.dart";
 import "package:laundryos_mobile/src/api/offline_api_transport.dart";
-import "package:laundryos_mobile/src/api/offline_cache.dart";
+import "package:laundryos_mobile/src/api/in_memory_offline_cache.dart";
 import "package:laundryos_mobile/src/api/upload_file.dart";
 import "package:laundryos_mobile/src/push/push_registrar.dart";
 import "package:laundryos_mobile/src/repositories/auth_repository.dart";

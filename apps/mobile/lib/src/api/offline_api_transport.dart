@@ -1,8 +1,11 @@
 import "dart:math";
 
 import "api_exception.dart";
+import "network_exception.dart";
+import "queued_offline_exception.dart";
 import "api_transport.dart";
 import "mutation_queue.dart";
+import "pending_mutation.dart";
 import "upload_file.dart";
 
 /// Dekorator transport: mutasi yang gagal karena jaringan disimpan di antrean

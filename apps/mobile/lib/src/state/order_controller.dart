@@ -1,7 +1,9 @@
 import "package:flutter/foundation.dart";
 
 import "../api/api_exception.dart";
+import "../api/queued_offline_exception.dart";
 import "../models/order.dart";
+import "../models/order_status.dart";
 import "../repositories/order_repository.dart";
 
 class OrderController extends ChangeNotifier {

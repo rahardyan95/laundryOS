@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 
-import "../theme/app_metrics.dart";
 import "../theme/app_palette.dart";
 
 /// Marka merek LaundryOS: ubin squircle dengan tetesan air dan potongan ombak.
@@ -9,6 +8,9 @@ import "../theme/app_palette.dart";
 /// layar dan ikut warna tema. Geometrinya sama dengan `LogoMark` di web
 /// (`apps/web/src/components/layout/logo.tsx`), jadi satu identitas dipakai di
 /// dua platform. Bukan ilustrasi generik dan bukan ikon pustaka (R-04, R-22).
+///
+/// Angka geometri di `_MarkPainter` adalah koordinat ruang vektor 32-unit
+/// milik karya seni ini, bukan jarak UI — jadi tidak memakai `AppSpacing`.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 44, this.onDark = false});
 
@@ -29,32 +31,6 @@ class BrandMark extends StatelessWidget {
           wave: onDark ? AppPalette.lime : AppPalette.pine,
         ),
       ),
-    );
-  }
-}
-
-/// Marka plus nama produk. Dipakai di layar masuk sebagai fokus tunggal layar.
-class BrandLockup extends StatelessWidget {
-  const BrandLockup({super.key, this.markSize = 48, this.subtitle});
-
-  final double markSize;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        const BrandMark(size: 56),
-        const SizedBox(height: AppSpacing.md),
-        Text("LaundryOS", style: theme.textTheme.headlineSmall),
-        if (subtitle != null) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(subtitle!,
-              style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
-        ],
-      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import "../api/api_client.dart";
 import "../api/api_exception.dart";
 import "../models/catalog.dart";
+import "../models/service.dart";
 
 class CatalogRepository {
   CatalogRepository(this._api, this._tokenProvider);

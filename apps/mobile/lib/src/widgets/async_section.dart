@@ -58,10 +58,13 @@ class _LoadingBlock extends StatelessWidget {
       padding: EdgeInsets.symmetric(
           vertical: compact ? AppSpacing.lg : AppSpacing.xxl),
       child: const Center(
-          child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5))),
+        child: SizedBox(
+          width: AppLoaderSizes.block,
+          height: AppLoaderSizes.block,
+          child: CircularProgressIndicator(
+              strokeWidth: AppLoaderSizes.strokeWide),
+        ),
+      ),
     );
   }
 }

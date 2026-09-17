@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../domain/format.dart";
+import "../domain/order_card_policy.dart";
 import "../domain/order_machine.dart";
 import "../models/order.dart";
 import "../models/role.dart";
@@ -129,11 +130,10 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final next = OrderMachine.next(order.status);
-    final canAdvance = role.canAdvanceOrder && next != null;
-    final canCancel =
-        role.canCancelOrder && order.status == OrderStatus.received;
-    final isPaid = order.paymentStatus == "paid";
+    final next = OrderCardPolicy.nextOf(order);
+    final canAdvance = OrderCardPolicy.canAdvance(role, order);
+    final canCancel = OrderCardPolicy.canCancel(role, order);
+    final isPaid = OrderCardPolicy.isPaid(order);
 
     return SurfaceCard(
       child: Column(
@@ -186,7 +186,7 @@ class _OrderCard extends StatelessWidget {
                 if (canAdvance)
                   FilledButton.tonal(
                     onPressed: () => controller.advance(order),
-                    child: Text("Ke ${OrderMachine.label(next)}"),
+                    child: Text("Ke ${OrderMachine.label(next!)}"),
                   ),
               ],
             ),

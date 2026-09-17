@@ -25,7 +25,13 @@ import type {
   User,
 } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/api-error";
+import { Clock } from "@/lib/clock";
 import { OrderMachine } from "@/lib/order-machine";
+import { OrderPricing } from "@/lib/order-pricing";
+import { PaymentPolicy } from "@/lib/payment-policy";
+import { SchedulePolicy } from "@/lib/schedule-policy";
+import { Sorter } from "@/lib/sorter";
+import { TaskMachine } from "@/lib/task-machine";
 import { Format } from "@/lib/format";
 
 interface SeedOrderConfig {
@@ -168,8 +174,7 @@ export class InMemoryStore {
       order.id = `ord-seed-${index + 1}`;
       const outlet = this.outletById(order.outletId);
       const prefix = outlet?.code ?? "XX";
-      const date = new Date();
-      const stamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
+      const stamp = Clock.todayStamp();
       const seq = (counters.get(prefix) ?? 0) + 1;
       counters.set(prefix, seq);
       order.ticket = `${prefix}-${stamp}-${String(seq).padStart(3, "0")}`;
@@ -181,13 +186,12 @@ export class InMemoryStore {
   }
 
   private iso(hoursAgo: number): string {
-    return new Date(Date.now() - hoursAgo * 3_600_000).toISOString();
+    return Clock.hoursAgoIso(hoursAgo);
   }
 
   private ticketFor(outlet: Outlet): string {
     const prefix = outlet.code;
-    const date = new Date();
-    const stamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
+    const stamp = Clock.todayStamp();
     const todayCount = this.orderList.filter(
       (o) => o.outletId === outlet.id && o.ticket.startsWith(`${prefix}-${stamp}`)
     ).length;
@@ -204,7 +208,7 @@ export class InMemoryStore {
       unit: entry.service.unit,
       qty: entry.qty,
       unitPrice: entry.service.pricePerUnit,
-      subtotal: Math.round(entry.qty * entry.service.pricePerUnit),
+      subtotal: OrderPricing.priceItem({ key: 0, serviceId: entry.service.id, qty: String(entry.qty) }, [entry.service]).subtotal,
     }));
     const total = items.reduce((sum, item) => sum + item.subtotal, 0);
     const flowIndex = OrderMachine.FLOW.indexOf(cfg.status);
@@ -268,7 +272,7 @@ export class InMemoryStore {
   }
 
   customers(): Customer[] {
-    return [...this.customerList].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return Sorter.byCreatedDesc(this.customerList);
   }
 
   upsertCustomer(input: UpsertCustomerInput): Customer {
@@ -289,7 +293,7 @@ export class InMemoryStore {
       phone: input.phone,
       address: input.address,
       notes: input.notes,
-      createdAt: new Date().toISOString(),
+      createdAt: Clock.nowIso(),
     };
     this.customerList.push(created);
     return created;
@@ -326,7 +330,7 @@ export class InMemoryStore {
         (o) => o.ticket.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q)
       );
     }
-    return result.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return Sorter.byCreatedDesc(result);
   }
 
   findOrder(id: string): Order | undefined {
@@ -351,15 +355,15 @@ export class InMemoryStore {
         unit: service.unit,
         qty: entry.qty,
         unitPrice: service.pricePerUnit,
-        subtotal: Math.round(entry.qty * service.pricePerUnit),
+        subtotal: OrderPricing.lineTotal(entry.qty, service.pricePerUnit),
         note: entry.note,
       };
     });
-    const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+    const total = OrderPricing.total(items);
     if (input.paidAmount > total) {
       throw new ApiError(422, "Nominal dibayar tidak boleh melebihi total order.");
     }
-    const now = new Date().toISOString();
+    const now = Clock.nowIso();
     const order: Order = {
       id: `ord-${Date.now()}`,
       tenantId: this.tenantId,
@@ -373,13 +377,15 @@ export class InMemoryStore {
       pickupRequested: input.pickupRequested,
       deliveryRequested: input.deliveryRequested,
       status: "received",
-      paymentStatus: input.paidAmount >= total ? "paid" : input.paidAmount > 0 ? "partial" : "unpaid",
+      paymentStatus: PaymentPolicy.status(input.paidAmount, total),
       paymentMethod: input.paidAmount > 0 ? input.paymentMethod : null,
       paidAmount: input.paidAmount,
       total,
       createdAt: now,
       estimatedDoneAt: items[0]
-        ? new Date(Date.now() + (this.serviceList.find((s) => s.id === items[0].serviceId)?.estimatedHours ?? 48) * 3_600_000).toISOString()
+        ? Clock.hoursFromNowIso(
+            this.serviceList.find((s) => s.id === items[0].serviceId)?.estimatedHours ?? 48
+          )
         : undefined,
       history: [
         { status: "received", at: now, byUserId: actor.id, byUserName: actor.name },
@@ -398,7 +404,7 @@ export class InMemoryStore {
     if (!OrderMachine.canTransition(order.status, next)) {
       throw new ApiError(422, `Transisi status tidak sah: ${OrderMachine.label(order.status)} → ${OrderMachine.label(next)}.`);
     }
-    const now = new Date().toISOString();
+    const now = Clock.nowIso();
     order.status = next;
     order.history.push({ status: next, at: now, byUserId: actor.id, byUserName: actor.name, note });
     if (next === "completed") order.completedAt = now;
@@ -412,7 +418,7 @@ export class InMemoryStore {
     if (!OrderMachine.canTransition(order.status, "cancelled")) {
       throw new ApiError(422, "Order hanya dapat dibatalkan sebelum diproses (status Diterima).");
     }
-    const now = new Date().toISOString();
+    const now = Clock.nowIso();
     order.status = "cancelled";
     order.history.push({ status: "cancelled", at: now, byUserId: actor.id, byUserName: actor.name, note });
     return order;
@@ -429,9 +435,7 @@ export class InMemoryStore {
       .filter((o) => o.status === "ready")
       .map((o) => {
         const readyEvent = [...o.history].reverse().find((h) => h.status === "ready");
-        const hoursWaiting = readyEvent
-          ? Math.round((Date.now() - new Date(readyEvent.at).getTime()) / 3_600_000)
-          : 0;
+        const hoursWaiting = readyEvent ? Clock.hoursBetweenIso(readyEvent.at) : 0;
         return { ticket: o.ticket, customerName: o.customerName, hoursWaiting };
       })
       .filter((r) => r.hoursWaiting >= 12);
@@ -448,14 +452,11 @@ export class InMemoryStore {
   }
 
   private static todayStr(): string {
-    return new Date().toISOString().slice(0, 10);
+    return Clock.nowIso().slice(0, 10);
   }
 
   private static taskNext(status: DeliveryTaskStatus): DeliveryTaskStatus | null {
-    if (status === "pending") return "assigned";
-    if (status === "assigned") return "in_progress";
-    if (status === "in_progress") return "done";
-    return null;
+    return TaskMachine.next(status);
   }
 
   private seedOperations(): void {
@@ -524,15 +525,15 @@ export class InMemoryStore {
         title: `Cucian siap diambil (${firstOrder.ticket})`,
         body: `${firstOrder.customerName} · hubungi untuk pengambilan`,
         readAt: null,
-        createdAt: new Date().toISOString(),
+        createdAt: Clock.nowIso(),
       },
       {
         id: "ntf-2",
         type: "OrderNotification",
         title: `Order baru ${firstOrder.ticket}`,
         body: `${firstOrder.customerName} · order tercatat`,
-        readAt: new Date().toISOString(),
-        createdAt: new Date(Date.now() - 3_600_000).toISOString(),
+        readAt: Clock.nowIso(),
+        createdAt: Clock.hoursAgoIso(1),
       },
     ];
   }
@@ -543,14 +544,13 @@ export class InMemoryStore {
   }
 
   deliveryTasks(): DeliveryTask[] {
-    return [...this.taskList].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
+    return Sorter.byScheduledAsc(this.taskList);
   }
 
   createDeliveryTask(input: CreateDeliveryTaskInput): DeliveryTask {
     const order = this.orderList.find((o) => o.id === input.orderId);
     if (!order) throw new ApiError(404, "Order tidak ditemukan.");
-    const scheduled = new Date(input.scheduledAt).getTime();
-    if (!input.scheduledAt || Number.isNaN(scheduled) || scheduled <= Date.now()) {
+    if (!SchedulePolicy.isFutureIso(input.scheduledAt)) {
       throw new ApiError(422, "Jadwal harus di masa depan.");
     }
     const driver = input.driverId
@@ -585,7 +585,7 @@ export class InMemoryStore {
       throw new ApiError(422, "Transisi task tidak sah.");
     }
     task.status = target;
-    if (target === "done") task.completedAt = new Date().toISOString();
+    if (target === "done") task.completedAt = Clock.nowIso();
     return task;
   }
 
@@ -650,7 +650,7 @@ export class InMemoryStore {
   }
 
   notifications(): AppNotification[] {
-    return [...this.notificationList].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return Sorter.byCreatedDesc(this.notificationList);
   }
 
   unreadCount(): number {
@@ -660,11 +660,11 @@ export class InMemoryStore {
   markNotificationRead(id: string): void {
     const item = this.notificationList.find((n) => n.id === id);
     if (!item) throw new ApiError(404, "Notifikasi tidak ditemukan.");
-    item.readAt = new Date().toISOString();
+    item.readAt = Clock.nowIso();
   }
 
   markAllNotificationsRead(): void {
-    const now = new Date().toISOString();
+    const now = Clock.nowIso();
     for (const item of this.notificationList) {
       item.readAt = now;
     }
@@ -681,13 +681,13 @@ export class InMemoryStore {
           : `Order ${order.ticket} · ${label}`,
       body: `${order.customerName} · ${label}`,
       readAt: null,
-      createdAt: new Date().toISOString(),
+      createdAt: Clock.nowIso(),
     });
   }
 
   reportSummary(outletId?: string, from?: string, to?: string): ReportSummary {
     const toDate = to ?? InMemoryStore.todayStr();
-    const fromDate = from ?? new Date(Date.now() - 29 * 86_400_000).toISOString().slice(0, 10);
+    const fromDate = from ?? Clock.daysAgoDate(29);
     const scoped = this.orderList.filter(
       (o) =>
         o.status !== "cancelled" &&
@@ -721,9 +721,7 @@ export class InMemoryStore {
       to: toDate,
       revenueTotal: scoped.reduce((s, o) => s + o.total, 0),
       ordersTotal: scoped.length,
-      revenueByDay: [...byDay.entries()]
-        .map(([date, row]) => ({ date, ...row }))
-        .sort((a, b) => a.date.localeCompare(b.date)),
+      revenueByDay: Sorter.byDateAsc([...byDay.entries()].map(([date, row]) => ({ date, ...row }))),
       ordersByStatus: [...byStatus.entries()].map(([status, count]) => ({ status, count })),
       topServices: [...services.entries()]
         .map(([name, row]) => ({ name, ...row }))
@@ -734,7 +732,7 @@ export class InMemoryStore {
 
   salesCsv(outletId?: string, from?: string, to?: string): string {
     const toDate = to ?? InMemoryStore.todayStr();
-    const fromDate = from ?? new Date(Date.now() - 29 * 86_400_000).toISOString().slice(0, 10);
+    const fromDate = from ?? Clock.daysAgoDate(29);
     const scoped = this.orderList.filter(
       (o) =>
         o.status !== "cancelled" &&

@@ -1,3 +1,6 @@
+# ARSIP 2026-09-17 — TIDAK dipakai compose mana pun (prod memakai path /api di laundryos.conf,
+# bukan subdomain api.*). Disimpan sebagai referensi bila kelak API dipisah ke subdomain sendiri.
+# Untuk mengaktifkan: rename tanpa .disabled + mount di docker-compose.prod.yml service nginx.
 # Reverse proxy untuk API LaundryOS (produksi).
 # Ganti server_name dan path SSL sesuai domain. Jalankan di container Nginx
 # pada network compose yang sama dengan service `api` (php-fpm :9000).

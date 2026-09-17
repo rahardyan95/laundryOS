@@ -1,4 +1,4 @@
-import type { SessionPayload } from "@/lib/api/types";
+import type { Outlet, SessionPayload } from "@/lib/api/types";
 
 const STORAGE_KEY = "laundryos.session";
 const OUTLET_KEY = "laundryos.outlet";
@@ -93,5 +93,9 @@ export class SessionManager {
 
   static setOutletId(id: string): void {
     SessionManager.storage()?.setItem(OUTLET_KEY, id);
+  }
+
+  static activeOutlet(session: SessionPayload, outletId: string): Outlet | undefined {
+    return session.outlets.find((o) => o.id === outletId) ?? session.outlets[0];
   }
 }

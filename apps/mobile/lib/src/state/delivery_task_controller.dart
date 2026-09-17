@@ -1,13 +1,18 @@
 import "package:flutter/foundation.dart";
 
 import "../api/api_exception.dart";
+import "../api/queued_offline_exception.dart";
+import "../api/proof_capture.dart";
 import "../models/delivery_task.dart";
+import "../models/delivery_task_status.dart";
 import "../repositories/delivery_task_repository.dart";
 
 class DeliveryTaskController extends ChangeNotifier {
-  DeliveryTaskController(this._repository);
+  DeliveryTaskController(this._repository, {ProofCapture? proofCapture})
+      : _proofCapture = proofCapture ?? ProofCapture();
 
   final DeliveryTaskRepository _repository;
+  final ProofCapture _proofCapture;
 
   final List<DeliveryTask> _tasks = [];
   List<DeliveryTask> get tasks => List.unmodifiable(_tasks);
@@ -84,6 +89,14 @@ class DeliveryTaskController extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  /// Alur lengkap dari widget: ambil foto kamera lalu unggah. Null = pengguna
+  /// membatalkan kamera (bukan kegagalan).
+  Future<bool?> captureAndUploadProof(DeliveryTask task) async {
+    final captured = await _proofCapture.capture();
+    if (captured == null) return null;
+    return uploadProof(task, bytes: captured.bytes, filename: captured.filename);
   }
 
   void _replace(DeliveryTask updated) {

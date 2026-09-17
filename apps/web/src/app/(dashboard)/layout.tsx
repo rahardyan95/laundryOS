@@ -11,7 +11,7 @@ import { api } from "@/lib/api/client";
 import type { SessionPayload } from "@/lib/api/types";
 import { NavPolicy } from "@/lib/nav-policy";
 import { SessionManager } from "@/lib/api/session";
-import { UNAUTHORIZED_EVENT } from "@/lib/api/laravel/http-client";
+import { HttpClient } from "@/lib/api/laravel/http-client";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -53,8 +53,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       SessionManager.clear();
       router.replace("/login");
     };
-    window.addEventListener(UNAUTHORIZED_EVENT, handler);
-    return () => window.removeEventListener(UNAUTHORIZED_EVENT, handler);
+    window.addEventListener(HttpClient.UNAUTHORIZED_EVENT, handler);
+    return () => window.removeEventListener(HttpClient.UNAUTHORIZED_EVENT, handler);
   }, [router]);
 
   if (!session) {

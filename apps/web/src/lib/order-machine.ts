@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/lib/api/types";
+import type { Order, OrderStatus } from "@/lib/api/types";
 
 export class OrderMachine {
   static readonly FLOW: OrderStatus[] = [
@@ -32,5 +32,30 @@ export class OrderMachine {
       cancelled: "Dibatalkan",
     };
     return labels[status];
+  }
+
+  static filterOptions(): { value: string; label: string }[] {
+    return [
+      { value: "all", label: "Semua status" },
+      ...OrderMachine.FLOW.concat("cancelled" as OrderStatus).map((status) => ({
+        value: status,
+        label: OrderMachine.label(status as OrderStatus),
+      })),
+    ];
+  }
+
+  static matchesQuery(order: Order, query: string): boolean {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      order.ticket.toLowerCase().includes(q) || order.customerName.toLowerCase().includes(q)
+    );
+  }
+
+  static visible(orders: Order[], statusFilter: string, query: string): Order[] {
+    return orders.filter((order) => {
+      if (statusFilter !== "all" && order.status !== statusFilter) return false;
+      return OrderMachine.matchesQuery(order, query);
+    });
   }
 }

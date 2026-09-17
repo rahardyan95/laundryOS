@@ -2,7 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:laundryos_mobile/src/api/api_client.dart";
 import "package:laundryos_mobile/src/api/api_exception.dart";
 import "package:laundryos_mobile/src/api/api_transport.dart";
-import "package:laundryos_mobile/src/models/order.dart";
+import "package:laundryos_mobile/src/models/order_status.dart";
 
 import "support/fake_transport.dart";
 

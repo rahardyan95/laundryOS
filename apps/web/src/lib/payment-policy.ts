@@ -23,6 +23,16 @@ export class PaymentPolicy {
     return PaymentPolicy.labels[status];
   }
 
+  static remaining(total: number, paid: number): number {
+    return total - paid;
+  }
+
+  static receiptLabel(status: PaymentStatus, paidFormatted: string): string {
+    if (status === "paid") return "LUNAS";
+    if (status === "partial") return `DP ${paidFormatted}`;
+    return "BELUM LUNAS";
+  }
+
   static validateDraft(input: OrderDraftCheck): { valid: boolean; message: string } {
     if (!input.hasCustomer) {
       return { valid: false, message: "Pilih pelanggan atau buat pelanggan baru." };

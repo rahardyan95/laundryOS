@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:laundryos_mobile/src/api/api_client.dart";
 import "package:laundryos_mobile/src/api/api_transport.dart";
-import "package:laundryos_mobile/src/models/order.dart";
+import "package:laundryos_mobile/src/models/order_status.dart";
 import "package:laundryos_mobile/src/repositories/order_repository.dart";
 import "package:laundryos_mobile/src/state/order_controller.dart";
 
