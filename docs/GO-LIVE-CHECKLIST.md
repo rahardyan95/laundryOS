@@ -4,7 +4,8 @@ Dokumen operator: apa yang harus disiapkan manusia, urutan eksekusi, dan bukti y
 sebelum aplikasi dipakai pelanggan. Perintah teknis rinci ada di [`infra/DEPLOY.md`](../infra/DEPLOY.md);
 rilis mobile ada di [`apps/mobile/README.md`](../apps/mobile/README.md).
 
-Status: kode siap; blokir yang tersisa **milik pihak ketiga** (lihat §1).
+Status: **belum go-live** — kerjakan tahap `docs/CHECKPOINT.md` §7 berurutan D1 (CI hardening) →
+D2 (rehearsal staging) → D3 (cutover produksi). Blokir D3 milik pihak ketiga (lihat §1).
 
 ---
 

@@ -200,16 +200,37 @@ Invarian yang mudah dilanggar (pernah menjadi bug):
 
 ---
 
-## 7. Pekerjaan berikutnya
+## 7. Pekerjaan berikutnya (tahap development sebelum go-live)
 
-Yang bisa dikerjakan di dalam repo sudah selesai; sisanya butuh pihak ketiga/akun berbayar:
+Hasil analisa 2026-09-17: **belum aman untuk traffic produksi**. Yang hijau baru
+tingkat lokal; job CI baru belum pernah hijau di runner dan bukti lingkungan
+prod belum ada. Kerjakan berurutan D1 → D2 → D3.
+
+### D1 — CI hardening (dalam repo, tanpa pihak ketiga)
+
+| # | Pekerjaan | Bukti selesai |
+|---|---|---|
+| D1.1 | Job `restore-drill`: tambah langkah `build api` + `composer install` sebelum seed (runner bersih tak punya image/vendor) | hijau di Actions |
+| D1.2 | Job `load`: `P95_MS=800` hampir pasti merah di `artisan serve` (p95 lokal 1,4s); naikkan default dev atau targetkan ke php-fpm staging | hijau di Actions |
+| D1.3 | Job mobile emulator: `integration_test/order_sync_test.dart` (T10) belum jalan di CI — tambah job emulator Android | hijau di Actions |
+| D1.4 | Triase 7 WARN ZAP (termasuk `CSP: Wildcard Directive` x18): pastikan bukan dari config kita, turunkan yang perlu | 0 FAIL tetap, tiap WARN tercatat alasannya |
+
+### D2 — Rehearsal staging (butuh VPS/domain sementara)
+
+| # | Pekerjaan | Bukti selesai |
+|---|---|---|
+| D2.1 | Full hijau Actions di branch: `restore-drill`, `load`, `e2e-prod`, `zap-baseline`, T10 emulator | semua job hijau |
+| D2.2 | T5 login Secure-cookie via HTTPS staging | `Set-Cookie` memuat `Secure`+`HttpOnly`, storage tanpa token |
+| D2.3 | T6 drill rollback tag lama | `/up` + `/api/v1/health` → `200` di tag lama, catat di log operasi |
+
+### D3 — Cutover produksi + store (butuh akun/prod)
 
 | # | Pekerjaan | Blokirnya | Mulai dari |
 |---|---|---|---|
-| 1 | Push FCM benar-benar terkirim | butuh proyek Firebase + `google-services.json` | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 5 |
-| 2 | AAB bertanda tangan + listing Play Store | butuh keystore produksi + akun Google Play | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 1–4 |
-| 3 | Deploy ke VPS/domain | butuh VPS + DNS + SMTP + bucket S3 | `docs/GO-LIVE-CHECKLIST.md` §1–§3 |
-| 4 | Drill restore bulanan & alert eksternal | operasional berjalan | `docs/GO-LIVE-CHECKLIST.md` §5 |
+| D3.1 | Push FCM benar-benar terkirim | butuh proyek Firebase + `google-services.json` | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 5 |
+| D3.2 | AAB bertanda tangan + listing Play Store | butuh keystore produksi + akun Google Play | `docs/GO-LIVE-CHECKLIST.md` §4 langkah 1–4 |
+| D3.3 | Deploy ke VPS/domain + SMTP + S3 + Sentry + cron backup + alert eksternal | butuh VPS + DNS + SMTP + bucket S3 + DSN Sentry | `docs/GO-LIVE-CHECKLIST.md` §1–§3, §5 |
+| D3.4 | Drill restore bulanan & alert eksternal | operasional berjalan | `docs/GO-LIVE-CHECKLIST.md` §5 |
 
 Backlog fitur (pasca-MVP, butuh vendor): payment gateway, WhatsApp Business, printer thermal ESC/POS,
 rotasi refresh token, enkripsi PII at-rest, WAF/pen-test eksternal.
